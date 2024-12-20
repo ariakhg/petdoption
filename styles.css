@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+:root {
+    --whitebg: #FFFFFF;
+    --beigebg: #FCEED5;
+    --lighterbeige: #F8F8F8;
+    --yellowbtn: #FBD157;
+    --activeyellow: #f8be0e;
+    --lightblue: #E4F4FF;
+    --darkblue: #103559;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Nunito', sans-serif;
+    color: #103559;
+}
+
+body {
+    height: 100vh;
+    width: 100%;
+    background-color: var(--whitebg);
+}
+
+/* Navigation Bar */
+.navbar {
+    background-color: var(--whitebg);
+    padding: 1rem 0;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.nav-links img {
+    height: 40px;
+}
+
+.nav-links {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+/* login.php */
+/* Main Content */
+.landing-title {
+    text-align: center;
+    padding: 1rem;
+}
+
+.landing-title h1 {
+    font-weight: 800;
+    font-size: 38px
+}
+
+.landing-title h2 {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 600;
+    font-size: 25px;
+    padding-bottom: 1rem;
+}
+
+.landing {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+}
+
+.landing img {
+    width: 80%;
+    border-radius: 12px;
+    padding: 2rem 0 0 7rem;
+    margin-right: 0;
+}
+
+.login-form {
+    flex: 1;
+    padding: 2rem;
+    background-color: var(--beigebg);
+    border-radius: 25px;
+    max-width: 20rem;
+}
+
+.login-form h2 {
+    text-align: center;
+    font-size: 20px;
+    font-family: 'Nunito Sans', sans-serif;
+    padding-bottom: 0.3rem;
+}
+
+.change-prompt {
+    padding-top: 1rem;
+    font-size: 16px;
+    text-align: center;
+}
+.change-prompt a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-form input[type=email] {
+    background-image: url('assets/User_alt_fill.png');
+    background-position: 10px 10px; 
+    background-repeat: no-repeat;
+    padding: 12px 20px 12px 40px;
+}
+
+.login-form input[type=password] {
+    background-image: url('assets/Lock_alt_fill.png');
+    background-position: 10px 10px; 
+    background-repeat: no-repeat;
+    padding: 12px 20px 12px 40px;
+}
+
+.login-form p {
+    font-size: 16px;
+}
+
+
+/* About Us */
+.aboutus {
+    padding: 4rem 0;
+    margin: 4rem 2rem 0 2rem;
+    background-color: var(--beigebg);
+}
+
+.aboutus-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    padding: 0 2rem;
+}
+
+.aboutus-card {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--lighterbeige);
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.aboutus-card img {
+    width: 64px;
+    margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+    background-color: var(--beigebg);
+    color: var(--background-color);
+}
+
+.footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 2rem;
+    align-items: center;
+    font-size: 14px;
+}
+
+.footer-logo {
+    height: 45px;
+}
+
+.footer a {
+    color: var(--background-color);
+    text-decoration: none;
+    padding-left: 1rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--yellowbtn);
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    border: 2px solid var(--yellowbtn);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    background-color: var(--activeyellow);
+}
+
+.btn-secondary {
+    background-color: var(--beigebg);
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    border: 2px solid var(--yellowbtn);
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background-color: var(--activeyellow);
+}
+
+.btn-form {
+    background-color: var(--yellowbtn);
+    font-weight: 700;
+    width: 100%;
+    padding: 0.6rem 1.2rem;;
+    border-radius: 50px;
+    border: 2px solid var(--yellowbtn);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-form:hover {
+    background-color: var(--activeyellow);
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+
+/* register.php */
+/* Register Card */
+.register-container {
+    max-width: 1100px;
+    margin: 1rem auto;
+}
+
+.register-card {
+    background-color: var(--lighterbeige);
+    border-radius: 50px;
+    display: flex;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.left-section {
+    flex: 1;
+    padding: 4rem 5rem 4rem 5rem;
+    background-color: var(--lighterbeige);
+}
+
+.left-section h1 {
+    font-family: 'Nunito Sans', sans-serif;
+    color: var(--darkblue);
+    font-size: 40px;
+    margin-bottom: 1.5rem;
+}
+
+.left-section p {
+    margin-bottom: 3rem;
+}
+
+.register-img {
+    width: 100%;
+    max-width: 380px;
+    display: block;
+    margin: auto;    
+}
+
+.right-section {
+    flex: 1;
+    padding: 4rem 5rem 4rem 5rem;
+    background-color: var(--beigebg);
+    border-radius: 50px;
+}
+
+.right-section h2 {
+    font-family: 'Nunito Sans', sans-serif;
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 0.3rem;
+}
+
+/* Form */
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.account-type p {
+    margin-bottom: 0.5rem;
+}
+
+.radio-group {
+    display: flex;
+    justify-content: space-evenly;
+    gap: 2rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.name-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin: 1rem 0 1rem 0;
+
+}
+
+.form-fields input {
+    border-radius: 50px;
+    border: none;
+    padding: 12px 20px 12px 20px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 50px;
+    background-color: var(--whitebg);
+    color: var(--darkblue);
+}
