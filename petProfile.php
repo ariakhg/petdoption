@@ -11,7 +11,7 @@ if (!$pet_id) {
 }
 
 try {
-    // Fetch pet details with lister information
+    // Fetch pet details with lister information and check if current user reserved it
     $sql = "SELECT p.*, 
             CASE 
                 WHEN p.Center_ID IS NOT NULL THEN ac.CenterName
@@ -24,14 +24,19 @@ try {
             CASE 
                 WHEN p.Center_ID IS NOT NULL THEN ac.ProfilePic
                 WHEN p.User_ID IS NOT NULL THEN i.ProfilePic
-            END AS lister_pic
+            END AS lister_pic,
+            CASE 
+                WHEN ar.User_ID = ? THEN true
+                ELSE false
+            END AS is_reserved_by_user
             FROM pets p
             LEFT JOIN individualusers i ON p.User_ID = i.User_ID
             LEFT JOIN adoptioncenters ac ON p.Center_ID = ac.Center_ID
+            LEFT JOIN adoptionrequests ar ON p.Pet_ID = ar.Pet_ID AND ar.Status = 'Pending'
             WHERE p.Pet_ID = ?";
             
     $stmt = $conn->prepare($sql);
-    $stmt->execute([$pet_id]);
+    $stmt->execute([$_SESSION['user_id'] ?? null, $pet_id]);
     $pet = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$pet) {
@@ -304,14 +309,14 @@ try {
 
     .about-title {
         color: #103559;
-        font-size: 36px;
+        font-size: 24px;
         font-weight: 700;
         margin-bottom: 1rem;
     }
 
     .about-text {
         color: #424242;
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 400;
         line-height: 1.6;
         margin-bottom: 2rem;
@@ -319,14 +324,14 @@ try {
 
     .medical-info, .date-info {
         margin-bottom: 1rem;
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 400;
     }
 
     .medical-label, .date-label {
         color: #1a237e;
         font-weight: 700;
-        font-size: 24px;
+        font-size: 18px;
         display: inline;
     }
 
@@ -354,14 +359,14 @@ try {
 
     .lister-name {
         color: #103559;
-        font-size: 24px;
+        font-size: 20px;
         font-weight: bold;
         margin-bottom: 0.5rem;
     }
 
     .lister-location {
         color: #103559;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 400px;
         margin-bottom: 1.5rem;
     }
@@ -418,6 +423,8 @@ try {
             </div>
             <?php if ($pet['AdoptionStatus'] === 'Available'): ?>
                 <button id="adoptButton" class="btn-primary" onclick="toggleAdoption()">Adopt Me</button>
+            <?php elseif ($pet['AdoptionStatus'] === 'Reserved' && $pet['is_reserved_by_user']): ?>
+                <button id="cancelButton" class="btn-primary" onclick="showCancelModal()">Unreserve</button>
             <?php endif; ?>
         </div>
     </div>
@@ -471,8 +478,19 @@ try {
         </div>
     </div>
 
+    <!-- Cancel Modal -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-question">Cancel your adoption application?</h2>
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="hideCancelModal()">No, keep it</button>
+                <button class="confirm-btn" onclick="confirmCancellation()">Yes, cancel it</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        let isAdopted = false;
+        let isAdopted = <?php echo ($pet['AdoptionStatus'] === 'Reserved') ? 'true' : 'false' ?>;
         const adoptButton = document.getElementById('adoptButton');
         const statusBadge = document.getElementById('statusBadge');
 
@@ -480,37 +498,138 @@ try {
             if (!isAdopted) {
                 showConfirmModal();
             } else {
-                // Reset the button and status
-                isAdopted = false;
-                adoptButton.textContent = 'Adopt Me';
-                adoptButton.classList.remove('unreserve');
-                statusBadge.textContent = 'Available';
-                statusBadge.classList.remove('reserved');
+                cancelReservation();
             }
         }
+
         function showConfirmModal() {
-            document.getElementById('confirmMoal').style.display = 'block';
+            document.getElementById('confirmModal').style.display = 'block';
         }
 
         function hideConfirmModal() {
-            document.getElementById('confirmAdoption').style.display = 'none';
+            document.getElementById('confirmModal').style.display = 'none';
         }
 
         function confirmAdoption() {
-            isAdopted = true;
-            document.getElementById('confirmModal').style.display = 'none';
-            document.getElementById('successModal').style.display = 'block';
-            
-            // Update button and status
-            adoptButton.textContent = 'Unreserve Me';
-            adoptButton.classList.add('unreserve');
-            statusBadge.textContent = 'Reserved';
-            statusBadge.classList.add('reserved');
+            console.log('Sending adoption request...');
+            fetch('handlers/adoption.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    pet_id: <?php echo $pet_id ?>,
+                    action: 'reserve'
+                })
+            })
+            .then(response => {
+                console.log('Response received:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data received:', data);
+                if (data.success) {
+                    // Hide confirm modal and show success modal
+                    document.getElementById('confirmModal').style.display = 'none';
+                    document.getElementById('successModal').style.display = 'block';
+                    
+                    // Update status badge
+                    statusBadge.textContent = 'Reserved';
+                    statusBadge.className = 'status-available reserved';
+                    
+                    // Update adopt button
+                    adoptButton.textContent = 'Unreserve';
+                    isAdopted = true;
 
-            // Hide success modal after 3 seconds
-            setTimeout(() => {
-                document.getElementById('successModal').style.display = 'none';
-            }, 3000);
+                    // Hide success modal after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('successModal').style.display = 'none';
+                    }, 3000);
+                } else {
+                    console.error('Error:', data.message);
+                    alert(data.message || 'Failed to submit adoption request');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        function cancelReservation() {
+            if (confirm('Are you sure you want to cancel your reservation?')) {
+                fetch('handlers/adoption.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pet_id: <?php echo $pet_id ?>,
+                        action: 'unreserve'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update status badge
+                        statusBadge.textContent = 'Available';
+                        statusBadge.className = 'status-available';
+                        
+                        // Reset button
+                        adoptButton.textContent = 'Adopt Me';
+                        isAdopted = false;
+                        
+                        alert('Reservation cancelled successfully');
+                    } else {
+                        alert(data.message || 'Failed to cancel reservation');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            }
+        }
+
+        function showCancelModal() {
+            document.getElementById('cancelModal').style.display = 'block';
+        }
+
+        function hideCancelModal() {
+            document.getElementById('cancelModal').style.display = 'none';
+        }
+
+        function confirmCancellation() {
+            fetch('handlers/adoption.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    pet_id: <?php echo $pet_id ?>,
+                    action: 'unreserve'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide cancel modal
+                    document.getElementById('cancelModal').style.display = 'none';
+                    
+                    // Update status badge
+                    statusBadge.textContent = 'Available';
+                    statusBadge.className = 'status-available';
+                    
+                    // Update button
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to cancel reservation');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
         }
 
         // Close modals when clicking outside
@@ -519,7 +638,6 @@ try {
                 event.target.style.display = 'none';
             }
         }
-        
     </script>
 </body>
 </html>

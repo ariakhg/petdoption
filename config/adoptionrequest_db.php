@@ -6,35 +6,30 @@ require 'connection.php';
 
 try {
     // Create the SQL query to create the table
-    $sql1 = "CREATE TABLE IF NOT EXISTS `adoptionrequest` (
+    $sql1 = "CREATE TABLE IF NOT EXISTS `adoptionrequests` (
         `Request_ID` int(5) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
-        `Finder_ID` int(5) UNSIGNED NOT NULL,
-        `Lister_ID` int(5) UNSIGNED,
-        `Center_ID` int(5) UNSIGNED,
         `Pet_ID` int(5) UNSIGNED NOT NULL,
-        `DateRequested` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-        `Status` enum('Pending','Approved','Rejected','') NOT NULL
-  )";
-  $conn->exec($sql1);
+        `User_ID` int(5) UNSIGNED NOT NULL,
+        `RequestDate` timestamp NOT NULL DEFAULT current_timestamp(),
+        `Status` enum('Pending','Approved','Rejected') NOT NULL
+    )";
+    $conn->exec($sql1);
 
-  // Add foreign key constraints
-  $sql2 = "ALTER TABLE `adoptionrequest`
-            ADD KEY `user_finder` (`Finder_ID`),
-            ADD KEY `user_lister` (`Lister_ID`),
-            ADD KEY `pet_listed` (`Pet_ID`)";
-  $conn->exec($sql2);
+    // Add foreign key constraints
+    $sql2 = "ALTER TABLE `adoptionrequests`
+            ADD KEY `pet_request` (`Pet_ID`),
+            ADD KEY `user_request` (`User_ID`)";
+    $conn->exec($sql2);
 
-  $sql3 = "ALTER TABLE `adoptionrequest`
-            ADD CONSTRAINT `center_lister` FOREIGN KEY (`Lister_ID`) REFERENCES `adoptioncenters` (`Center_ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `pet_listed` FOREIGN KEY (`Pet_ID`) REFERENCES `pets` (`Pet_ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `user_finder` FOREIGN KEY (`Finder_ID`) REFERENCES `individualusers` (`User_ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `user_lister` FOREIGN KEY (`Lister_ID`) REFERENCES `individualusers` (`User_ID`) ON DELETE CASCADE ON UPDATE CASCADE";
-  $conn->exec($sql3);
+    $sql3 = "ALTER TABLE `adoptionrequests`
+            ADD CONSTRAINT `pet_request` FOREIGN KEY (`Pet_ID`) REFERENCES `pets` (`Pet_ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+            ADD CONSTRAINT `user_request` FOREIGN KEY (`User_ID`) REFERENCES `individualusers` (`User_ID`) ON DELETE CASCADE ON UPDATE CASCADE";
+    $conn->exec($sql3);
 
-  echo "Table adoptionrequest created successfully with constraints";
+    echo "Table adoptionrequests created successfully with constraints";
 
 } catch (PDOException $e) {
-    echo "Error creating adoptionrequest table: " . $e->getMessage();
+    echo "Error creating adoptionrequests table: " . $e->getMessage();
 }
 
 // Close the connection

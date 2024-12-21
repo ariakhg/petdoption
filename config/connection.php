@@ -1,5 +1,3 @@
-<!-- 2 -->
-
 <?php
 
 $host = 'localhost';

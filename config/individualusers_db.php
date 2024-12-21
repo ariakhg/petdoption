@@ -14,7 +14,8 @@ try {
         `Location` varchar(255) NOT NULL,
         `Password` varchar(255) NOT NULL,
         `Role` enum('Center','User','Admin') NOT NULL,
-        `SavedPets` text
+        `SavedPets` text,
+        `ReservedPets` text
     )";
 
     // Execute the SQL statement
@@ -29,8 +30,8 @@ try {
 try {
     // Individual user data
     $individualUsers = [
-        ['1', 'Rebecca Lee', 'rebecca@gmail.com', 'profile/defaultprofile.png', '1234567890', 'Johor', 'password123', 'User', ''],
-        ['2', 'Jane Soo', 'janesoo@gmail.com', 'janesoo.jpg', '9876543210', 'Selangor', 'securepassword', 'User', '']
+        ['1', 'Rebecca Lee', 'rebecca@gmail.com', 'profile/defaultprofile.png', '1234567890', 'Johor', 'password123', 'User', '', ''],
+        ['2', 'Jane Soo', 'janesoo@gmail.com', 'janesoo.jpg', '9876543210', 'Selangor', 'securepassword', 'User', '', '']
     ];
 
     // Insert hashed passwords into the database for individual users
