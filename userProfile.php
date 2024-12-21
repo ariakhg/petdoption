@@ -1,191 +1,388 @@
-<php
+<?php
+session_start();
+require 'config/connection.php';
 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$userRole = $_SESSION['role'];
+$userId = $_SESSION['user_id'];
+$table = ($userRole === 'Center') ? 'adoptioncenters' : 'individualusers';
+$idField = ($userRole === 'Center') ? 'Center_ID' : 'User_ID';
+
+// Fetch user data
+try {
+    $stmt = $conn->prepare("SELECT * FROM $table WHERE $idField = ?");
+    $stmt->execute([$userId]);
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Error fetching user data: " . $e->getMessage());
+}
 ?>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .profile-card {
+            margin: 30px auto;
+            display: flex;
+            background-color: #ffffff;
+            border-radius: 20px;
+            overflow: hidden;
+            width: 800px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-left {
+            background-color: #FFF5E4;
+            padding: 100px 40px 40px 40px;
+            text-align: center;
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .profile-right {
+            background-color: #F8F8F8;
+            padding: 40px;
+            flex: 2;
+        }
+
+        .profile-pic-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+        }
+
+        .profile-pic-container img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #666;
+            object-fit: cover;
+        }
+
+        .profile-right label {
+            display: block;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .profile-right input {
+            width: 100%;
+            padding: 12px 16px 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .profile-right input:disabled {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+        .name-input-container {
+            display: flex;
+            flex-direction: column; /* Stack the label above the input */
+            flex: 1; /* Make both fields equal width */
+        }
+
+        .name-input-container label {
+            margin-bottom: 5px; /* Add spacing between the label and input */
+            font-weight: 500;
+            color: #333;
+        }
+
+        .name-input-container input {
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 1rem;
+        }
+
+        #edit-button {
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .form-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+
+        .form-success {
+            color: #28a745;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .upload-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background-color: #FFD93D;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .upload-icon img {
+            width: 35px;
+            height: 35px;
+        }
+
+        #picture {
+            display: none;
+        }
+    </style>
 </head>
-<style>
-    /* body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background-color: #f7f7f7;
-    } */
-
-    .profile-card {
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 30px;
-        margin-bottom: 30px;
-        display: flex;
-        background-color: #ffffff;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 50px;
-        overflow: hidden;
-        width: 736px;
-    }
-
-    .profile-left {
-        background-color: #fff5e4;
-        padding: 50px;
-        text-align: center;
-        flex: 1;
-    }
-
-    .profile-left img {
-        border-radius: 50%;
-        width: 200px;
-        height: 200px;
-        margin-bottom: 20px;
-    }
-
-    .profile-left h2 {
-        font-size: 24px;
-        color: #103559;
-        margin-bottom: 10px;
-    }
-
-    .profile-left button {
-        background-color: #ffcc00;
-        border: none;
-        border-radius: 5px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        color: #333;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-    .profile-left button:hover {
-        background-color: #e6b800;
-    }
-
-    .profile-right {
-        background-color: #F8F8F8;
-        padding: 50px;
-        flex: 2;
-    }
-
-    .profile-right label {
-        display: block;
-        font-size: 20px;
-        font-weight: 500;
-        margin-bottom: 5px;
-        color: #103559;
-    }
-
-    .profile-right input {
-        height: 45px;
-        width: 100%;
-        padding: 10px;
-        padding-left: 20px;
-        border-radius: 50px;
-        background-color:#FFFFFF;
-        margin-bottom: 15px;
-        font-size: 16px;
-        color: #9D9C9C;
-    }
-
-    .profile-right input[disabled] {
-        background-color: #FFFFFF;
-    }
-
-    .btn-primary {
-        background-color: var(--yellowbtn);
-        padding: 0.6rem 1.2rem;
-        border: 1px solid #E7BD43;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 16px;
-        height: 45px;
-        width: 131px;
-        font-weight: bold;
-        border-radius: 50px;
-    }
-
-</style>
 <body>
-    <!-- Navigation Bar -->
-    <?php include 'navbar.php';?>
+    <?php include 'navbar.php'; ?>
 
     <div class="profile-card">
         <div class="profile-left">
-            <img src="images/woman.png" alt="Profile Picture">
-            <h2 id="profile-title">Jozelle Chuah</h2>
+            <div class="profile-pic-container">
+                <img id="profile-image" src="<?php echo $userData['ProfilePic'] ?: 'images/woman.png'; ?>" alt="Profile Picture">
+                <label for="picture" class="upload-icon">
+                    <img src="assets/upload-icon.png" alt="Upload">
+                </label>
+                <input type="file" id="picture" name="picture" accept="image/*">
+            </div>
+            <h2 id="profile-title"><?php echo $userRole === 'Center' ? $userData['CenterName'] : $userData['Name']; ?></h2>
             <button id="edit-button" class="btn-primary">Edit</button>
+            <div class="button-group" style="display: none;">
+                <button type="button" id="cancel-button" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save</button>
+            </div>
         </div>
         <div class="profile-right">
-            <label for="first-name">First name:</label>
-            <input type="text" id="first-name" value="Jozelle" disabled>
+            <form id="profileForm">
+                <div class="name-group">
+                    <div class="name-input-container">
+                        <label for="first-name">First name:</label>
+                        <input type="text" id="first-name" name="first-name" value="<?php echo explode(' ', $userData['Name'])[0] ?? ''; ?>" disabled required>
+                    </div>
+                    <div class="name-input-container">
+                        <label for="last-name">Last name:</label>
+                        <input type="text" id="last-name" name="last-name" value="<?php echo explode(' ', $userData['Name'])[1] ?? ''; ?>" disabled required>
+                    </div>
+                </div>
 
-            <label for="surname">Surname:</label>
-            <input type="text" id="surname" value="Chuah" disabled>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="<?php echo $userData['Email']; ?>" disabled required>
 
-            <label for="email">Email:</label>
-            <input type="email" id="email" value="shytchuah@gmail.com" disabled>
+                <label for="phone">Phone Number:</label>
+                <input type="text" id="phone" name="phone" value="<?php echo $userData['PhoneNo']; ?>" disabled required>
 
-            <label for="phone">Phone Number:</label>
-            <input type="text" id="phone" value="60123456789" disabled>
+                <label for="state">State:</label>
+                <input type="text" id="state" name="state" value="<?php echo $userData['Location']; ?>" disabled required>
 
-            <label for="state">State:</label>
-            <input type="text" id="state" value="Selangor" disabled>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" value="********" disabled>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" value="password" disabled>
+                <div id="confirm-password-field" style="display: none;">
+                    <label for="confirm-password">Confirm Password:</label>
+                    <input type="password" id="confirm-password" name="confirm-password">
+                    <p class="form-error" id="password-error"></p>
+                </div>
+
+            </form>
+            <p id="form-error-message" class="form-error"></p>
+            <p id="form-success-message" class="form-success"></p>
         </div>
     </div>
 
     <!-- Footer -->
     <footer>
         <div class="footer">
-            <p>&copy;Copyright 2024 Pedoption. All rights reserved.</p>
+            <p>&copy; 2024 Petdoption. All rights reserved.</p>
             <img src="assets/logo.png" alt="Petdoption Logo" class="footer-logo">
             <div>
                 <a href="#privacy">Privacy Policy</a>
                 <a href="#terms">Terms of Service</a>
             </div>
         </div>
-    </footer>
+    </footer>
+
     <script>
-        const editButton = document.getElementById('edit-button');
-        const inputs = document.querySelectorAll('.profile-right input');
-        const profileTitle = document.getElementById('profile-title');
-        const profileDetails = document.getElementById('profile-details');
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButton = document.getElementById('edit-button');
+            const inputs = document.querySelectorAll('.profile-right input:not([type="password"])');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordField = document.getElementById('confirm-password-field');
+            const buttonGroup = document.querySelector('.button-group');
+            const profileForm = document.getElementById('profileForm');
+            const cancelButton = document.getElementById('cancel-button');
+            const pictureInput = document.getElementById('picture');
 
-        // Simulate user type (center or individual)
-        const isCenter = true; // Change to false for individual
+            // Store original values
+            let originalValues = {};
+            inputs.forEach(input => {
+                originalValues[input.id] = input.value;
+            });
 
-        if (isCenter) {
-            profileTitle.textContent = "Adoption Center Name";
-            profileDetails.innerHTML = `
-                <label for="center-name">Center Name:</label>
-                <input type="text" id="center-name" value="Happy Paws Adoption" disabled>
+            // Handle Edit button click
+            editButton.addEventListener('click', () => {
+                inputs.forEach(input => input.disabled = false);
+                passwordInput.disabled = false;
+                passwordInput.value = ''; // Clear password field
+                confirmPasswordField.style.display = 'block';
+                buttonGroup.style.display = 'flex';
+                editButton.style.display = 'none';
+            });
 
-                <label for="email">Email:</label>
-                <input type="email" id="email" value="shytchuah@gmail.com" disabled>
+            // Handle Cancel button click
+            cancelButton.addEventListener('click', () => {
+                inputs.forEach(input => {
+                    input.value = originalValues[input.id];
+                    input.disabled = true;
+                });
+                passwordInput.value = '********';
+                passwordInput.disabled = true;
+                confirmPasswordField.style.display = 'none';
+                buttonGroup.style.display = 'none';
+                editButton.style.display = 'block';
+                document.getElementById('password-error').textContent = '';
+                document.getElementById('form-error-message').textContent = '';
+                document.getElementById('form-success-message').textContent = '';
+            });
 
-                <label for="phone">Phone Number:</label>
-                <input type="text" id="phone" value="60123456789" disabled>
+            // Handle profile picture upload
+            pictureInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) return;
 
-                <label for="state">State:</label>
-                <input type="text" id="state" value="Selangor" disabled>
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please upload a JPG, PNG, or GIF file.');
+                    return;
+                }
 
-                <label for="password">Password:</label>
-                <input type="password" id="password" value="password" disabled>
-            `;
-        }
+                const formData = new FormData();
+                formData.append('picture', file);
 
-        editButton.addEventListener('click', () => {
-            const isEditing = editButton.textContent === 'Save';
-            inputs.forEach(input => input.disabled = isEditing);
-            editButton.textContent = isEditing ? 'Edit' : 'Save';
+                // Show loading state
+                const profileImage = document.getElementById('profile-image');
+                profileImage.style.opacity = '0.5';
+
+                fetch('handlers/updateProfilePic.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update profile image
+                        profileImage.src = data.picture;
+                        document.getElementById('form-success-message').textContent = 'Profile picture updated successfully';
+                        document.getElementById('form-error-message').textContent = '';
+                    } else {
+                        document.getElementById('form-error-message').textContent = data.message;
+                        document.getElementById('form-success-message').textContent = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('form-error-message').textContent = 'Failed to upload profile picture';
+                })
+                .finally(() => {
+                    profileImage.style.opacity = '1';
+                    pictureInput.value = ''; // Reset file input
+                });
+            });
+
+            // Handle form submission
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate passwords if changed
+                const password = passwordInput.value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (password && password !== confirmPassword) {
+                    document.getElementById('password-error').textContent = 'Passwords do not match';
+                    return;
+                }
+
+                const formData = new FormData(this);
+                
+                // Add loading state to save button
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.textContent;
+                submitButton.textContent = 'Saving...';
+                submitButton.disabled = true;
+
+                fetch('handlers/updateProfile.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update profile title with new name
+                        if (data.newName) {
+                            document.getElementById('profile-title').textContent = data.newName;
+                        }
+                        
+                        // Update original values
+                        inputs.forEach(input => {
+                            if (input.type !== 'password') {
+                                originalValues[input.id] = input.value;
+                            }
+                        });
+                        
+                        // Reset form state
+                        inputs.forEach(input => input.disabled = true);
+                        passwordInput.value = '********';
+                        passwordInput.disabled = true;
+                        confirmPasswordField.style.display = 'none';
+                        buttonGroup.style.display = 'none';
+                        editButton.style.display = 'block';
+                        
+                        document.getElementById('form-success-message').textContent = data.message;
+                        document.getElementById('form-error-message').textContent = '';
+                    } else {
+                        document.getElementById('form-error-message').textContent = data.message;
+                        document.getElementById('form-success-message').textContent = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('form-error-message').textContent = 'Update failed';
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
+                });
+            });
         });
     </script>
 </body>

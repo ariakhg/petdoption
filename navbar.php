@@ -38,8 +38,9 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
             <?php if (isset($_SESSION['role'])): ?>
                 <?php if ($_SESSION['role'] === 'User'): ?>
                     <a href="findAPet.php">Find a Pet</a>
+                    <a href="petListing.php">My Pet Listings</a>
                     <a href="listAPet.php">List a Pet</a>
-                    <a href="volunteer.php">Volunteer</a>
+                    <a href="volunteeringForm.php">Volunteer</a>
                 <?php elseif ($_SESSION['role'] === 'Center'): ?>
                     <a href="listAPet.php">List a Pet</a>
                 <?php elseif ($_SESSION['role'] === 'Admin'): ?>
@@ -49,7 +50,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
         </div>
 
         <!-- Right side of navbar -->
-        <div class="nav-links">
+        <div class="nav-links"> 
             <?php if (isset($_SESSION['role'])): ?>
                 <?php if ($_SESSION['role'] === 'User'): ?>
                     <a class="nav-bar-icon" href="">
@@ -61,7 +62,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
                 <?php endif; ?>
                 <a href="userProfile.php">
                     <img class="nav-profile" src="<?php echo htmlspecialchars($userProfile['ProfilePic']); ?>" 
-                    alt="Profile Picture">
+                    alt="Profile Picture" style="border-radius: 50%; width: 2.3rem; height: 2.3rem; object-fit: cover;">
                 </a>
                 <a href="handlers/logout.php">Log Out</a>
             <?php else: ?>

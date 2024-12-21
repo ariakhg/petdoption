@@ -417,6 +417,7 @@ try {
 </style>
 
 <body>
+    <!-- Navigation Bar -->
     <?php include 'navbar.php'; ?>
 
     <a href="findAPet.php" class="back-link">< Pet Profile</a>

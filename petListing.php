@@ -4,29 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Pet Listings</title>
-    <link rel="stylesheet" href="css/petListing.css">
+    <link rel="stylesheet" href="petListing.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-links">
-                <img src="assets/logo.png" alt="Petdoption Logo">
-                <a href="">Find a Pet</a>
-                <a href="">List a Pet</a>
-                <a href="">Volunteer</a>
-            </div>
-            <div class="nav-links">
-                <a class="nav-bar-icon" href="">
-                    <img src="assets/saved-pets-icon.png">
-                </a>
-                <a class="nav-bar-icon" href="">
-                    <img src="assets/chat-icon.png">
-                </a>
-                <img class="nav-profile" src="">
-                <a href="login.php">Log Out</a>
-            </div>
-        </div>
-    </nav>
+    
+    <!-- Navigation Bar -->
+    <?php include 'navbar.php'; ?>
+
     <div class="parentBox">
         <div class="content-header">
             <h1 class="title">My Pet Listings</h1>
