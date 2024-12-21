@@ -1,4 +1,4 @@
-<!-- 4 -->
+<!-- 5 -->
 
 <?php
 require 'connection.php';
@@ -26,19 +26,25 @@ try {
     echo "Error creating individualusers table: " . $e->getMessage();
 }
 
-// try {
-//     // Insert sample data into individualusers
-//     $sql = "INSERT INTO `individualusers` (`User_ID`, `Name`, `Email`, `ProfilePic`, `PhoneNo`, `Location`, `Password`, `Role`, `SavedPets`) VALUES
-//         ('U001', 'Rebecca Lee', 'rebecca@gmail.com', 'rebeccalee.jpg', '1234567890', 'Johor', 'password123', 'User', 'P001,P002'),
-//         ('U002', 'Jane Soo', 'janesoo@gmail.com', 'janesoo.jpg', '9876543210', 'Selangor', 'securepassword', 'User', 'P003')";
-//     // Execute the SQL statement
-//     $conn->exec($sql);
+try {
+    // Individual user data
+    $individualUsers = [
+        ['1', 'Rebecca Lee', 'rebecca@gmail.com', 'profile/defaultprofile.png', '1234567890', 'Johor', 'password123', 'User', ''],
+        ['2', 'Jane Soo', 'janesoo@gmail.com', 'janesoo.jpg', '9876543210', 'Selangor', 'securepassword', 'User', '']
+    ];
 
-//     echo "Sample data inserted into individualusers successfully";
+    // Insert hashed passwords into the database for individual users
+    foreach ($individualUsers as $user) {
+        $hashedPassword = password_hash($user[6], PASSWORD_DEFAULT);  // Hash the password
+        $stmt = $conn->prepare("INSERT INTO individualusers (User_ID, Name, Email, ProfilePic, PhoneNo, Location, Password, Role, SavedPets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$user[0], $user[1], $user[2], $user[3], $user[4], $user[5], $hashedPassword, $user[7], $user[8]]);
+    }
 
-// } catch (PDOException $e) {
-//     echo "Error inserting sample data: " . $e->getMessage();
-// }
+    echo "Sample data inserted into individualusers successfully with hashed passwords<br>";
+
+} catch (PDOException $e) {
+    echo "Error inserting sample data: " . $e->getMessage();
+}
 
 // Close the connection
 $conn = null;

@@ -1,30 +1,77 @@
+<?php
+session_start();
+require_once 'config/connection.php';
+
+// Get pet ID from URL
+$pet_id = isset($_GET['id']) ? $_GET['id'] : null;
+
+if (!$pet_id) {
+    header('Location: findAPet.php');
+    exit();
+}
+
+try {
+    // Fetch pet details with lister information
+    $sql = "SELECT p.*, 
+            CASE 
+                WHEN p.Center_ID IS NOT NULL THEN ac.CenterName
+                WHEN p.User_ID IS NOT NULL THEN i.Name
+            END AS lister_name,
+            CASE 
+                WHEN p.Center_ID IS NOT NULL THEN ac.Location
+                WHEN p.User_ID IS NOT NULL THEN i.Location
+            END AS lister_location,
+            CASE 
+                WHEN p.Center_ID IS NOT NULL THEN ac.ProfilePic
+                WHEN p.User_ID IS NOT NULL THEN i.ProfilePic
+            END AS lister_pic
+            FROM pets p
+            LEFT JOIN individualusers i ON p.User_ID = i.User_ID
+            LEFT JOIN adoptioncenters ac ON p.Center_ID = ac.Center_ID
+            WHERE p.Pet_ID = ?";
+            
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([$pet_id]);
+    $pet = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$pet) {
+        header('Location: findAPet.php');
+        exit();
+    }
+} catch (PDOException $e) {
+    echo "Error: " . $e->getMessage();
+    exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pet Profile</title>
+    <title>Pet Profile - <?php echo htmlspecialchars($pet['Name']); ?></title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <style>
-.nav-bar-icon img {
-    width: 1.5rem;
-    height: 1.5rem;
-}
-a {
-    text-decoration: none;
-    color: #103559;
+    .nav-bar-icon img {
+        width: 1.5rem;
+        height: 1.5rem;
     }
-.back-link {
-    color: #103559;
-    font-size: 24px;
-    display: inline-block;
-    margin-bottom: 1rem;
-    font-weight: 700;
-    margin-left: 130px;
-    margin-top: 30px;
-    margin-bottom: 40px;
+    a {
+        text-decoration: none;
+        color: #103559;
     }
+    .back-link {
+        color: #103559;
+        font-size: 18px;
+        display: inline-block;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        margin-left: 130px;
+        margin-top: 30px;
+        margin-bottom: 40px;
+        }
     .card-container {
         display: flex;
         justify-content: center;
@@ -40,7 +87,6 @@ a {
         padding: 20px;
         display: flex;
         flex-direction: row;
-        /* position: relative; */
     }
     .pet-image {
         width: 257px;
@@ -53,7 +99,7 @@ a {
     .pet-name{
         margin-top: 30px;
         margin-left: 80px;
-        font-size: 40px;
+        font-size: 30px;
         height: 54px;
     }
     .status-available {
@@ -95,14 +141,14 @@ a {
 
     .detail-item h3 {
     margin: 0;
-    font-size: 24px;
+    font-size: 18px;
     color: #103559;
     font-weight: bold;
     }
 
     .detail-item p {
     margin: 5px 0 0;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 400;
     color: #103559;
     }
@@ -144,6 +190,10 @@ a {
 
     .btn-primary:hover {
         background-color: var(--activeyellow);
+    }
+
+    #adoptButton {
+        font-size: 14px
     }
 
     .modal {
@@ -328,97 +378,79 @@ a {
         width: 100%;
     }
 </style>
+
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-links">
-                <img src="assets/logo.png" alt="Petdoption Logo">
-                <a href="">Find a Pet</a>
-                <a href="">List a Pet</a>
-                <a href="">Volunteer</a>
-            </div>
-            <div class="nav-links">
-                <a class="nav-bar-icon" href="">
-                    <img src="assets/saved-pets-icon.png">
-                </a>
-                <a class="nav-bar-icon" href="">
-                    <img src="assets/chat-icon.png">
-                </a>
-                <img class="nav-profile" src="">
-                <a href="login.php">Log Out</a>
-            </div>
-        </div>
-    </nav>
-    <a href="#" class="back-link">< Pet Profile</a>
+    <?php include 'navbar.php'; ?>
+
+    <a href="findAPet.php" class="back-link">< Pet Profile</a>
+
     <div class="card-container">
         <div class="card">
-            <img src="images/dog1.jpg" alt="Mochi" class="pet-image">
-            <h2 class="pet-name">Mochi</h2>
-            <div id="statusBadge" class="status-available">Available</div>  
-            <div class="like-container"><input type="button" class="like-button" name="like" value="♡"></div>
+            <img src="<?php echo htmlspecialchars($pet['Photo']); ?>" alt="<?php echo htmlspecialchars($pet['Name']); ?>" class="pet-image">
+            <h2 class="pet-name"><?php echo htmlspecialchars($pet['Name']); ?></h2>
+            <div id="statusBadge" class="status-available <?php echo strtolower($pet['AdoptionStatus']); ?>">
+                <?php echo htmlspecialchars($pet['AdoptionStatus']); ?>
+            </div>
+            <div class="like-container">
+                <input type="button" class="like-button" value="♡">
+            </div>
             <div class="pet-details">
                 <div class="detail-item">
                     <h3>Breed</h3>
-                    <p>Dog, Pitbull</p>
+                    <p><?php echo htmlspecialchars($pet['AnimalType'] . ', ' . $pet['Breed']); ?></p>
                 </div>
                 <div class="detail-item">
                     <h3>Weight</h3>
-                    <p>2.5kg</p>
+                    <p><?php echo htmlspecialchars($pet['Weight']); ?>kg</p>
                 </div>
                 <div class="detail-item">
                     <h3>Height</h3>
-                    <p>80cm</p>
+                    <p><?php echo htmlspecialchars($pet['Height']); ?>cm</p>
                 </div>
                 <div class="detail-item">
                     <h3>Gender</h3>
-                    <p>Male</p>
+                    <p><?php echo htmlspecialchars($pet['Gender']); ?></p>
                 </div>
                 <div class="detail-item">
                     <h3>Color</h3>
-                    <p>White, Brown</p>
+                    <p><?php echo htmlspecialchars($pet['Color']); ?></p>
                 </div>
             </div>
-            <button id="adoptButton" class="btn-primary" onclick="toggleAdoption()">Adopt Me</button>
+            <?php if ($pet['AdoptionStatus'] === 'Available'): ?>
+                <button id="adoptButton" class="btn-primary" onclick="toggleAdoption()">Adopt Me</button>
+            <?php endif; ?>
         </div>
     </div>
+
     <div class="about-section">
-            <div class="about-content">
-                <h2 class="about-title">About Me</h2>
-                <p class="about-text">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
-                    Maecenas id turpis cursus, pulvinar nunc ut, dignissim 
-                    risus. Mauris ut ex mi. Praesent quis auctor sem. 
-                    Suspendisse egestas consectetur velit ut sagittis.
-                </p>
-                <div class="medical-info">
-                    <span class="medical-label">Medical History : </span>
-                    Fully Vaccinated
-                </div>
-                <div class="date-info">
-                    <span class="date-label">Date Listed : </span>
-                    27/11/2024
-                </div>
+        <div class="about-content">
+            <h2 class="about-title">About Me</h2>
+            <p class="about-text"><?php echo nl2br(htmlspecialchars($pet['Description'])); ?></p>
+            <div class="medical-info">
+                <span class="medical-label">Medical History : </span>
+                <?php echo htmlspecialchars($pet['MedicalHistory']); ?>
             </div>
-            
-            <div class="lister-card">
-                <h2 class="about-title">Lister</h2>
-                <div class="lister-avatar">
-                    <img src="images/lister.png" alt="Aria Khong">
-                </div>
-                <div class="lister-name">Aria Khong</div>
-                <div class="lister-location">Subang Jaya, Selangor</div>
-                <button class="contact-btn">Contact Lister</button>
+            <div class="date-info">
+                <span class="date-label">Date Listed : </span>
+                <?php echo date('d/m/Y', strtotime($pet['DateListed'])); ?>
             </div>
         </div>
+        
+        <div class="lister-card">
+            <h2 class="about-title">Lister</h2>
+            <div class="lister-avatar">
+                <img src="<?php echo htmlspecialchars($pet['lister_pic']); ?>" alt="Lister">
+            </div>
+            <div class="lister-name"><?php echo htmlspecialchars($pet['lister_name']); ?></div>
+            <div class="lister-location"><?php echo htmlspecialchars($pet['lister_location']); ?></div>
+            <button class="contact-btn">Contact Lister</button>
+        </div>
     </div>
-    <br><br><br>
 
-
-<!-- Confirmation Modal -->
-<div id="confirmModal" class="modal">
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
         <div class="modal-content">
-            <h2 class="modal-question">Confirm application to adopt?</h2>
+            <h2 class="modal-question">Send adoption application?</h2>
             <div class="modal-buttons">
                 <button class="cancel-btn" onclick="hideConfirmModal()">Cancel</button>
                 <button class="confirm-btn" onclick="confirmAdoption()">Confirm</button>
@@ -457,7 +489,7 @@ a {
             }
         }
         function showConfirmModal() {
-            document.getElementById('confirmModal').style.display = 'block';
+            document.getElementById('confirmMoal').style.display = 'block';
         }
 
         function hideConfirmModal() {
@@ -489,16 +521,5 @@ a {
         }
         
     </script>
-    <!-- Footer -->
-    <footer>
-        <div class="footer">
-            <p>&copy;Copyright 2024 Pedoption. All rights reserved.</p>
-            <img src="assets/logo.png" alt="Petdoption Logo" class="footer-logo">
-            <div>
-                <a href="#privacy">Privacy Policy</a>
-                <a href="#terms">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
 </body>
 </html>

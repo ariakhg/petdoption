@@ -62,13 +62,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Redirect based on role
             switch ($user['Role']) {
                 case 'User':
-                    header("Location: find-pet.php");
+                    header("Location: findAPet.php");
                     break;
                 case 'Center':
-                    header("Location: list-pet.php");
+                    header("Location: listAPet.php");
                     break;
                 case 'Admin':
-                    header("Location: admin-dashboard.php");
+                    header("Location: adminDashboard.php");
                     break;
             }
             exit();
@@ -95,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="nav-container">
             <div class="nav-links">
                 <img src="assets/logo.png" alt="Petdoption Logo">
-                <a href="login.php">About us</a>
+                <a href="login.php#aboutus">About us</a>
             </div>
             <div class="nav-links">
                 <a href="login.php" class="btn-secondary">Log In</a>
@@ -158,7 +158,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </main>
 
     <!-- Features Section -->
-    <section class="aboutus">
+    <section class="aboutus" id="aboutus">
         <div class="aboutus-container">
             <div class="aboutus-card">
                 <h3>Find</h3>

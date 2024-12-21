@@ -1,4 +1,4 @@
-<!-- 3 -->
+<!-- 4 -->
 
 <?php
 require 'connection.php';
@@ -19,17 +19,28 @@ try {
     $conn->exec($sql);
     echo "Table adoptioncenters created successfully<br>";
 
-    // // Insert sample data
-    // $sql = "INSERT INTO `adoptioncenters` 
-    //         (Center_ID, CenterName, PhoneNo, ProfilePic, Location, Email, Password, Role, AvgRating) VALUES
-    //         ('C001', 'PAWS', '017-284 7500', 'paws.png', 'Petaling Jaya', 'paws@gmail.com', 'pAw3!hehe', 'Center', 3.9),
-    //         ('C002', 'SPCA Selangor', '03-4256 5312', 'spca.png', 'Petaling Jaya', 'spca@gmail.com', 'Whatisagoodp@ssword', 'Center', 4.4)";
-    // $conn->exec($sql);
+} catch (PDOException $e) {
+    echo "Error creating adoptioncenters table: " . $e->getMessage() . "<br>";
+}
 
-    // echo "Sample data inserted successfully<br>";
+try {
+    // Adoption centers data
+    $adoptionCenters = [
+        ['1', 'PAWS', '017-284 7500', 'paws.png', 'Petaling Jaya', 'paws@gmail.com', 'pAw3!hehe', 'Center', 3.9],
+        ['2', 'SPCA Selangor', '03-4256 5312', 'spca.png', 'Petaling Jaya', 'spca@gmail.com', 'Whatisagoodp@ssword', 'Center', 4.4]
+    ];
+
+    // Insert hashed passwords into the database for adoption centers
+    foreach ($adoptionCenters as $center) {
+        $hashedPassword = password_hash($center[6], PASSWORD_DEFAULT);  // Hash the password
+        $stmt = $conn->prepare("INSERT INTO adoptioncenters (Center_ID, CenterName, PhoneNo, ProfilePic, Location, Email, Password, Role, AvgRating) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$center[0], $center[1], $center[2], $center[3], $center[4], $center[5], $hashedPassword, $center[7], $center[8]]);
+    }
+
+    echo "Sample data inserted into adoptioncenters successfully with hashed passwords<br>";
 
 } catch (PDOException $e) {
-    echo "Error: " . $e->getMessage();
+    echo "Error inserting sample data: " . $e->getMessage() . "<br>";
 }
 
 // Close the connection

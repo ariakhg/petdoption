@@ -1,4 +1,4 @@
-<!-- 6 -->
+<!-- 8 -->
 
 <?php
 require 'connection.php';

@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="nav-container">
             <div class="nav-links">
                 <img src="assets/logo.png" alt="Petdoption Logo">
-                <a href="login.php">About us</a>
+                <a href="login.php#aboutus">About us</a>
             </div>
             <div class="nav-links">
                 <a href="login.php" class="btn-secondary">Log In</a>

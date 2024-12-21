@@ -14,9 +14,13 @@ require 'config/connection.php';
 <style>
     .header1{
         height:182px;
-        /* width: 1250px; */
         display: flex;
     }
+
+    .header1 img {
+        width: 100%;
+    }
+
     h1{
         font-weight: 700;
         font-size: 32px;
@@ -237,26 +241,7 @@ require 'config/connection.php';
 
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-links">
-                <img src="assets/logo.png" alt="Petdoption Logo">
-                <a href="findAPet.php">Find a Pet</a>
-                <a href="">List a Pet</a>
-                <a href="">Volunteer</a>
-            </div>
-            <div class="nav-links">
-                <a class="nav-bar-icon" href="">
-                    <img src="assets/saved-pets-icon.png">
-                </a>
-                <a class="nav-bar-icon" href="">
-                    <img src="assets/chat-icon.png">
-                </a>
-                <img class="nav-profile" src="">
-                <a href="login.php">Log Out</a>
-            </div>
-        </div>
-    </nav>
+    <?php include 'navbar.php';?>
 
     <!-- Find A Pet -->
     <h1>Meet The Pets & Give Them A Loving Forever Home!</h1>
@@ -382,7 +367,7 @@ require 'config/connection.php';
                                 <img src="assets/lister-icon.png" alt="Lister">
                                 <?php echo $pet['lister_name']; ?>
                             </p>
-                            <button class="find-out-more" onclick="window.location.href='petDetails.php?id=<?php echo $pet['Pet_ID']; ?>'">
+                            <button class="find-out-more" onclick="window.location.href='petProfile.php?id=<?php echo $pet['Pet_ID']; ?>'">
                                 Find out more
                                 <img src="assets/arrow-right.png" alt="Arrow">
                             </button>

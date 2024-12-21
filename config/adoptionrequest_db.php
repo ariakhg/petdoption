@@ -1,4 +1,4 @@
-<!-- 6 -->
+<!-- 7 -->
 
 <?php
 // Require the connection file
@@ -7,14 +7,13 @@ require 'connection.php';
 try {
     // Create the SQL query to create the table
     $sql1 = "CREATE TABLE IF NOT EXISTS `adoptionrequest` (
-        `Request_ID` varchar(10) NOT NULL,
-        `Finder_ID` varchar(10) NOT NULL,
-        `Lister_ID` varchar(10) NOT NULL,
-        `Center_ID` varchar(10) NOT NULL,
-        `Pet_ID` varchar(10) NOT NULL,
+        `Request_ID` int(5) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+        `Finder_ID` int(5) UNSIGNED NOT NULL,
+        `Lister_ID` int(5) UNSIGNED,
+        `Center_ID` int(5) UNSIGNED,
+        `Pet_ID` int(5) UNSIGNED NOT NULL,
         `DateRequested` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-        `Status` enum('Pending','Approved','Rejected','') NOT NULL,
-        PRIMARY KEY (`Request_ID`)
+        `Status` enum('Pending','Approved','Rejected','') NOT NULL
   )";
   $conn->exec($sql1);
 
