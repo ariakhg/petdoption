@@ -6,13 +6,12 @@ require 'connection.php';
 try {
   // Create the reviewratings table
   $sql1 = "CREATE TABLE IF NOT EXISTS `chatbox` (
-    `Chat_ID` varchar(10) NOT NULL,
-    `Sender_ID` varchar(10) NOT NULL,
-    `Receiver_ID` varchar(10) NOT NULL,
+    `Chat_ID` int(5) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    `Sender_ID` int(5) UNSIGNED,
+    `Receiver_ID` int(5) UNSIGNED,
     `Timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
     `MessageText` text NOT NULL,
-    `Photo` varchar(255) NOT NULL,
-    PRIMARY KEY (`Chat_ID`)
+    `Photo` varchar(255) NOT NULL
   )";
   $conn->exec($sql1);
 

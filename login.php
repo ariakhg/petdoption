@@ -1,3 +1,85 @@
+<?php
+session_start();
+require_once 'config/connection.php';
+
+if (isset($_SESSION['error'])) {
+    echo '<div class="alert alert-error">' . $_SESSION['error'] . '</div>';
+    unset($_SESSION['error']);
+}
+if (isset($_SESSION['success'])) {
+    echo '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
+    unset($_SESSION['success']);
+}
+
+// Handle login form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    $password = $_POST['password'];
+    $accountType = $_POST['accountType'];
+    $remember = isset($_POST['remember']) ? true : false;
+
+    try {
+        switch ($accountType) {
+            case 'user':
+                $stmt = $conn->prepare("SELECT * FROM individualusers WHERE Email = ?");
+                break;
+            case 'adoption-center':
+                $stmt = $conn->prepare("SELECT * FROM adoptioncenters WHERE Email = ?");
+                break;
+            case 'admin':
+                $stmt = $conn->prepare("SELECT * FROM admin WHERE Email = ?");
+                break;
+        }
+
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            $_SESSION['error'] = "Email address not found. Please check your email or register for a new account.";
+        } elseif (!password_verify($password, $user['Password'])) {
+            $_SESSION['error'] = "Incorrect password. Please try again.";
+        } else {
+            // Login successful
+            $_SESSION['user_id'] = $user[($accountType === 'user' ? 'User_ID' : 
+                                        ($accountType === 'adoption-center' ? 'Center_ID' : 'Admin_ID'))];
+            $_SESSION['role'] = $user['Role'];
+            $_SESSION['email'] = $user['Email'];
+
+            // Handle remember me functionality
+            if ($remember) {
+                $token = bin2hex(random_bytes(32));
+                
+                $stmt = $conn->prepare("UPDATE " . ($accountType === 'user' ? 'individualusers' : 
+                                                 ($accountType === 'adoption-center' ? 'adoptioncenters' : 'admin')) . 
+                                     " SET remember_token = ? WHERE Email = ?");
+                $stmt->execute([$token, $email]);
+
+                setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/');
+                setcookie('user_email', $email, time() + (30 * 24 * 60 * 60), '/');
+                setcookie('user_role', $user['Role'], time() + (30 * 24 * 60 * 60), '/');
+            }
+
+            // Redirect based on role
+            switch ($user['Role']) {
+                case 'User':
+                    header("Location: find-pet.php");
+                    break;
+                case 'Center':
+                    header("Location: list-pet.php");
+                    break;
+                case 'Admin':
+                    header("Location: admin-dashboard.php");
+                    break;
+            }
+            exit();
+        }
+
+    } catch (PDOException $e) {
+        $_SESSION['error'] = "An error occurred. Please try again later.";
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +88,7 @@
     <title>Petdoption - Login</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar">
@@ -46,10 +129,10 @@
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="accountType" value="adoption-center">
-                                Adoption Center
+                                Center
                             </label>
                             <label class="radio-label">
-                                <input type="radio" name="accountType" value="adoption-center">
+                                <input type="radio" name="accountType" value="admin">
                                 Admin
                             </label>
                         </div>
@@ -57,6 +140,13 @@
                     <div class="form-fields">
                         <input type="email" id="email" name="email" placeholder="Email" required>
                         <input type="password" id="password" name="password" placeholder="Password" required>
+                        <div class="remember-me">
+                            <input type="checkbox" id="remember" name="remember">
+                            <label for="remember">Remember me</label>
+                        </div>
+                        <?php if(isset($_SESSION['error'])): ?>
+                            <div class="error-message"><?php echo $_SESSION['error']; unset($_SESSION['error']); ?></div>
+                        <?php endif; ?>
                     </div>
                     <button type="submit" class="btn-form">Log In</button>
                     <p class="change-prompt">
@@ -65,7 +155,7 @@
                 </form>
             </div>
         </div>
-    </section>
+    </main>
 
     <!-- Features Section -->
     <section class="aboutus">
@@ -84,7 +174,6 @@
             </div>
         </div>
     </section>
-    </main>
 
     <!-- Footer -->
     <footer>

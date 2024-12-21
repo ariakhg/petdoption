@@ -6,18 +6,17 @@ require 'connection.php';
 try {
   // Create the reports table
   $sql1 = "CREATE TABLE IF NOT EXISTS `reports` (
-    `Report_ID` varchar(10) NOT NULL,
-    `User_ID` varchar(10) NOT NULL,
-    `Center_ID` varchar(10) NOT NULL,
-    `Reported_User_ID` varchar(10) NOT NULL,
-    `Reported_Center_ID` varchar(10) NOT NULL,
+    `Report_ID` int(5) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+    `User_ID` int(5) UNSIGNED,
+    `Center_ID` int(5) UNSIGNED,
+    `Reported_User_ID` int(5) UNSIGNED,
+    `Reported_Center_ID` int(5) UNSIGNED,
     `Email` varchar(255) NOT NULL,
     `PhoneNo` varchar(100) NOT NULL,
     `Date` date NOT NULL,
     `Description` text NOT NULL,
     `Attachments` varchar(255) NOT NULL,
-    `Status` enum('Pending','Approved','Rejected','Resolved') NOT NULL,
-    PRIMARY KEY (`Report_ID`)
+    `Status` enum('Pending','Approved','Rejected','Resolved') NOT NULL
   )";
   $conn->exec($sql1);
 

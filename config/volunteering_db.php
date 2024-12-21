@@ -6,13 +6,12 @@ require 'connection.php';
 try {
   // Create the volunteering table
   $sql1 = "CREATE TABLE IF NOT EXISTS `volunteering` (
-  `Response_ID` varchar(10) NOT NULL,
-  `User_ID` varchar(10) NOT NULL,
+  `Response_ID` int(5) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  `User_ID` int(5) UNSIGNED NOT NULL,
   `Date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `Location` text NOT NULL,
   `EmergencyContact` varchar(100) NOT NULL,
-  `Status` enum('Pending','Approved','Rejected','') NOT NULL,
-  PRIMARY KEY (`Response_ID`)
+  `Status` enum('Pending','Approved','Rejected','') NOT NULL
   )";
 
   $conn->exec($sql1);

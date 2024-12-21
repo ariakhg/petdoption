@@ -315,12 +315,10 @@ require 'config/connection.php';
                     CASE 
                         WHEN p.Center_ID IS NOT NULL THEN ac.CenterName
                         WHEN p.User_ID IS NOT NULL THEN i.Name
-                        ELSE 'Unknown Owner'
                     END AS lister_name,
                     CASE 
                         WHEN p.Center_ID IS NOT NULL THEN ac.Location
                         WHEN p.User_ID IS NOT NULL THEN i.Location
-                        ELSE 'Unknown Location'
                     END AS location
                 FROM pets p
                 LEFT JOIN individualusers i ON p.User_ID = i.User_ID

@@ -6,13 +6,12 @@ require 'connection.php';
 try {
   // Create the reviewratings table
   $sql1 = "CREATE TABLE IF NOT EXISTS `reviewratings` (
-      `Rating_ID` varchar(10) NOT NULL,
-      `User_ID` varchar(10) NOT NULL,
-      `Reviewed_Center_ID` varchar(10) NOT NULL,
+      `Rating_ID` int(5) UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY,
+      `User_ID` int(5) UNSIGNED NOT NULL,
+      `Reviewed_Center_ID` int(5) UNSIGNED NOT NULL,
       `Date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
       `Rating` decimal(10,0) NOT NULL,
-      `Review` text NOT NULL,
-      PRIMARY KEY (`Rating_ID`)
+      `Review` text NOT NULL
   )";
   $conn->exec($sql1);
 

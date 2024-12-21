@@ -126,7 +126,7 @@ body {
 }
 
 .login-form input[type=password] {
-    background-image: url('assets/Lock_alt_fill.png');
+    background-image: url('assets/password-icon.png');
     background-position: 10px 10px; 
     background-repeat: no-repeat;
     padding: 12px 20px 12px 40px;
@@ -330,9 +330,16 @@ footer {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 16px;
 }
 
-.name-group {
+.remember-me {
+    align-items: center;
+    text-align: center;
+    font-size: 16px;
+}
+
+.name-group {   
     display: flex;
     gap: 1rem;
 }
@@ -342,7 +349,8 @@ footer {
     flex-direction: column;
     gap: 0.8rem;
     margin: 1rem 0 1rem 0;
-
+    align-items: center;
+    text-align: center;
 }
 
 .form-fields input {
@@ -361,4 +369,15 @@ input[type="password"] {
     border-radius: 50px;
     background-color: var(--whitebg);
     color: var(--darkblue);
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+    text-align: center;
+    font-size: 14px;
 }
