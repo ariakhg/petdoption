@@ -48,6 +48,10 @@
                                 <input type="radio" name="accountType" value="adoption-center">
                                 Adoption Center
                             </label>
+                            <label class="radio-label">
+                                <input type="radio" name="accountType" value="adoption-center">
+                                Admin
+                            </label>
                         </div>
                     </div>
                     <div class="form-fields">

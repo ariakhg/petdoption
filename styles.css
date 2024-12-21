@@ -5,7 +5,7 @@
     --beigebg: #FCEED5;
     --lighterbeige: #F8F8F8;
     --yellowbtn: #FBD157;
-    --activeyellow: #f8be0e;
+    --activeyellow: #E7BD43;
     --lightblue: #E4F4FF;
     --darkblue: #103559;
 }
@@ -54,6 +54,11 @@ body {
 .nav-links a {
     text-decoration: none;
     color: var(--text-color);
+}
+
+.nav-bar-icon img {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 /* login.php */
@@ -114,7 +119,7 @@ body {
 }
 
 .login-form input[type=email] {
-    background-image: url('assets/User_alt_fill.png');
+    background-image: url('assets/email-icon.png');
     background-position: 10px 10px; 
     background-repeat: no-repeat;
     padding: 12px 20px 12px 40px;
