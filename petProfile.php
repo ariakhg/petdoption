@@ -43,6 +43,16 @@ try {
         header('Location: findAPet.php');
         exit();
     }
+
+    // Check if pet is saved by current user
+    $checkSavedSql = "SELECT SavedPets FROM individualusers WHERE User_ID = ?";
+    $stmt = $conn->prepare($checkSavedSql);
+    $stmt->execute([$_SESSION['user_id'] ?? null]);
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    $savedPets = !empty($userData['SavedPets']) ? explode(',', $userData['SavedPets']) : [];
+    $isPetSaved = in_array($pet_id, $savedPets);
+    
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
     exit();
@@ -167,17 +177,39 @@ try {
     .like-container{
         margin-left: 200px;
     }
-    .like-button{
-        height: 30px;
-        width: 30px;
-        font-size: 24px;
-        line-height: 33px;
-        border-radius: 50px;
-        background-color: #FCEED5;
-        border: 1px solid #E7BD43;
-        margin-top: 35px;
-        align-items: right;
+
+    .like-button {
+        background-color: #FFF5E9;
+        border: none;
+        cursor: pointer;
+        padding: 12px;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        width: 48px;
+        height: 48px;
+        margin-top: 1.5rem;
     }
+
+    .like-button:hover {
+        background-color: #FFE8CC;
+    }
+
+    .like-button svg {
+        width: 24px;
+        height: 24px;
+        transition: all 0.3s ease;
+        stroke: #103559;
+    }
+
+    .like-button.saved {
+        background-color: #FFF5E9;
+    }
+
+    .like-button.saved svg {
+        fill:rgb(240, 95, 95);
+        stroke: #103559;
+    }
+
     .btn-primary {
         margin-top: 250px;
         margin-left: -160px;
@@ -397,7 +429,11 @@ try {
                 <?php echo htmlspecialchars($pet['AdoptionStatus']); ?>
             </div>
             <div class="like-container">
-                <input type="button" class="like-button" value="♡">
+                <button class="like-button <?php echo $isPetSaved ? 'saved' : ''; ?>" onclick="toggleSave(<?php echo $pet_id; ?>)">
+                    <svg viewBox="0 0 24 24" fill="<?php echo $isPetSaved ? '#103559' : 'none'; ?>" stroke="currentColor" stroke-width="2">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
             </div>
             <div class="pet-details">
                 <div class="detail-item">
@@ -637,6 +673,47 @@ try {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
             }
+        }
+
+        function toggleSave(petId) {
+            if (!document.querySelector('.like-button')) return;
+            
+            const button = document.querySelector('.like-button');
+            const isSaved = button.classList.contains('saved');
+            const action = isSaved ? 'unsave' : 'save';
+
+            fetch('handlers/savePet.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    pet_id: petId,
+                    action: action
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    button.classList.toggle('saved');
+                    const svg = button.querySelector('svg');
+                    if (data.isSaved) {
+                        svg.setAttribute('fill', '#FF6B6B');
+                    } else {
+                        svg.setAttribute('fill', 'none');
+                    }
+                } else {
+                    if (data.message === 'Please log in first') {
+                        window.location.href = 'login.php';
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
         }
     </script>
 </body>
