@@ -91,7 +91,7 @@ try {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 5rem;
+        margin-bottom: 3rem;
     }
     .card {
         background-color: #e7f3ff;
@@ -330,13 +330,17 @@ try {
 
     .about-section {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 2fr 1fr; /* 2/3 for about, 1/3 for lister */
         gap: 2rem;
+        margin: 2rem 8rem;
+        align-items: start; /* Align items to top */
     }
 
     .about-content {
-        padding: 0 1rem;
-        margin-left: 100px;
+        background-color: #FFFFFF;
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .about-title {
@@ -361,46 +365,77 @@ try {
     }
 
     .medical-label, .date-label {
-        color: #1a237e;
+        color: #103559;
         font-weight: 700;
         font-size: 18px;
         display: inline;
     }
 
     .lister-card {
-        margin-right: 100px;
         background-color: #F8F8F8;
         border-radius: 20px;
         padding: 2rem;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: sticky;
+        top: 2rem;
     }
 
-    .lister-avatar {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 1rem;
+    .lister-profile {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
     }
 
-    .lister-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+    .lister-pic {
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
+        object-fit: cover;
+        margin-right: 1rem;
     }
 
-    .lister-name {
+    .lister-info h3 {
         color: #103559;
         font-size: 20px;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .lister-info p {
+        color: #666666;
+        font-size: 16px;
+        margin: 0.5rem 0 0;
     }
 
     .lister-location {
-        color: #103559;
-        font-size: 18px;
-        font-weight: 400px;
-        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #666666;
+        font-size: 16px;
+        margin-top: 0.5rem;
+    }
+
+    .lister-location img {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Make the layout responsive */
+    @media (max-width: 1200px) {
+        .about-section {
+            margin: 2rem 4rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .about-section {
+            grid-template-columns: 1fr;
+            margin: 2rem 2rem;
+        }
+
+        .lister-card {
+            position: static;
+        }
     }
 
     .contact-btn {
@@ -414,6 +449,13 @@ try {
         cursor: pointer;
         width: 100%;
     }
+
+    .card img {
+        width: 250px;
+        height: 250px;
+        margin-right: 4rem;
+    }
+
 </style>
 
 <body>
@@ -469,24 +511,28 @@ try {
     <div class="about-section">
         <div class="about-content">
             <h2 class="about-title">About Me</h2>
-            <p class="about-text"><?php echo nl2br(htmlspecialchars($pet['Description'])); ?></p>
+            <p class="about-text"><?php echo htmlspecialchars($pet['Description']); ?></p>
+            
             <div class="medical-info">
-                <span class="medical-label">Medical History : </span>
+                <span class="medical-label">Medical History:</span>
                 <?php echo htmlspecialchars($pet['MedicalHistory']); ?>
             </div>
+            
             <div class="date-info">
-                <span class="date-label">Date Listed : </span>
-                <?php echo date('d/m/Y', strtotime($pet['DateListed'])); ?>
+                <span class="date-label">Listed on:</span>
+                <?php echo date('F j, Y', strtotime($pet['DateListed'])); ?>
             </div>
         </div>
-        
+
         <div class="lister-card">
             <h2 class="about-title">Lister</h2>
-            <div class="lister-avatar">
-                <img src="<?php echo htmlspecialchars($pet['lister_pic']); ?>" alt="Lister">
+            <div class="lister-profile">
+                <img src="<?php echo htmlspecialchars($pet['lister_pic']); ?>" alt="Lister" class="lister-pic">
+                <div class="lister-info">
+                    <h3 class="lister-info h3"><?php echo htmlspecialchars($pet['lister_name']); ?></h3>
+                    <p class="lister-info p"><?php echo htmlspecialchars($pet['lister_location']); ?></p>
+                </div>
             </div>
-            <div class="lister-name"><?php echo htmlspecialchars($pet['lister_name']); ?></div>
-            <div class="lister-location"><?php echo htmlspecialchars($pet['lister_location']); ?></div>
             <button class="contact-btn">Contact Lister</button>
         </div>
     </div>
@@ -525,6 +571,18 @@ try {
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer">
+            <p>&copy; 2024 Petdoption. All rights reserved.</p>
+            <img src="assets/logo.png" alt="Petdoption Logo" class="footer-logo">
+            <div>
+                <a href="#privacy">Privacy Policy</a>
+                <a href="#terms">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
 
     <script>
         let isAdopted = <?php echo ($pet['AdoptionStatus'] === 'Reserved') ? 'true' : 'false' ?>;

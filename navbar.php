@@ -39,11 +39,11 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
                 <?php if ($_SESSION['role'] === 'User'): ?>
                     <a href="findAPet.php">Find a Pet</a>
                     <a href="petListing.php">My Pet Listings</a>
-                    <a href="listAPet.php">List a Pet</a>
+                    <a href="petListingForm.php">List a Pet</a>
                     <a href="volunteeringForm.php">Volunteer</a>
                 <?php elseif ($_SESSION['role'] === 'Center'): ?>
                     <a href="petListing.php">My Pet Listings</a>
-                    <a href="listAPet.php">List a Pet</a>
+                    <a href="petListingForm.php">List a Pet</a>
                 <?php elseif ($_SESSION['role'] === 'Admin'): ?>
                     <a href="adminDashboard.php">Admin Dashboard</a>
                 <?php endif; ?>

@@ -56,6 +56,8 @@ try {
     <style>
         .parentBox {
             padding: 2rem 8rem 2rem 8rem;
+            overflow-y: auto; 
+            max-height: calc(100vh - 160px);
         }
         
         .content-header {
@@ -131,10 +133,11 @@ try {
         }
         
         .pet-image {
-            width: 80px;
-            height: 80px;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             object-fit: cover;
+            margin: 2.5rem 0 1.5rem 0;
         }
         
         .status-badge {
@@ -193,11 +196,11 @@ try {
         <div class="content-header">
             <h1 class="title">My Pet Listings</h1>
             <div class="petlisting-btn">
-                <button class="btn-primary" onclick="window.location.href='adoption_requests.php'">
+                <button class="btn-primary" onclick="window.location.href='adoptionRequest.php'">
                     Adoption Requests
                     <img src="assets/eye-icon.png" alt="View">
                 </button>
-                <button class="btn-primary" onclick="window.location.href='list_pet.php'">
+                <button class="btn-primary" onclick="window.location.href='petListingForm.php'">
                     List A New Pet
                     <img src="assets/plus-icon.png" alt="Add">
                 </button>
@@ -216,7 +219,16 @@ try {
             </div>
             <div class="pet-card">
                 <div class="pet-info">
-                    <img src="assets/<?php echo htmlspecialchars($pet['Photo']); ?>" alt="<?php echo htmlspecialchars($pet['Name']); ?>" class="pet-image">
+                    <?php if (!empty($pet['Photo'])): ?>
+                        <img src="<?php echo htmlspecialchars($pet['Photo']); ?>" 
+                             alt="<?php echo htmlspecialchars($pet['Name']); ?>" 
+                             class="pet-image"
+                             onerror="this.src='assets/default-pet.jpg'">
+                    <?php else: ?>
+                        <img src="assets/default-pet.jpg" 
+                             alt="Default pet image" 
+                             class="pet-image">
+                    <?php endif; ?>
                     <div class="pet-details">
                         <h2><?php echo htmlspecialchars($pet['Name']); ?></h2>
                         <p><?php echo htmlspecialchars($pet['AnimalType']); ?>, <?php echo htmlspecialchars($pet['Breed']); ?></p>
