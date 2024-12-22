@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: findAPet.php");
                     break;
                 case 'Center':
-                    header("Location: listAPet.php");
+                    header("Location: petListing.php");
                     break;
                 case 'Admin':
                     header("Location: adminDashboard.php");

@@ -26,8 +26,8 @@ try {
 try {
     // Adoption centers data
     $adoptionCenters = [
-        ['1', 'PAWS', '017-284 7500', 'paws.png', 'Petaling Jaya', 'paws@gmail.com', 'pAw3!hehe', 'Center', 3.9],
-        ['2', 'SPCA Selangor', '03-4256 5312', 'spca.png', 'Petaling Jaya', 'spca@gmail.com', 'Whatisagoodp@ssword', 'Center', 4.4]
+        ['1', 'PAWS', '017-284 7500', 'paws.png', 'Petaling Jaya', 'paws@gmail.com', '123', 'Center', 3.9],
+        ['2', 'SPCA Selangor', '03-4256 5312', 'spca.png', 'Petaling Jaya', 'spca@gmail.com', '123', 'Center', 4.4]
     ];
 
     // Insert hashed passwords into the database for adoption centers
