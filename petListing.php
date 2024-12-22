@@ -118,7 +118,9 @@ try {
         
         .pet-card {
             background: #F0F9FF;
-            padding: 1rem;
+            padding: 1rem 1rem 1rem 1rem;
+            width: 100%;
+            height: 120px;
             border-radius: 12px;
             margin-bottom: 1rem;
             display: flex;
@@ -133,11 +135,11 @@ try {
         }
         
         .pet-image {
-            width: 150px;
-            height: 150px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             object-fit: cover;
-            margin: 2.5rem 0 1.5rem 0;
+            margin: 1.5rem 1rem 1.5rem 1.5rem;
         }
         
         .status-badge {
