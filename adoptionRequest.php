@@ -33,8 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update adoption request status
                 $stmt = $conn->prepare("
                     UPDATE adoptionrequests 
-                    SET Status = 'Accepted', 
-                        UpdatedAt = NOW() 
+                    SET Status = 'Accepted'
                     WHERE Request_ID = ?
                 ");
                 $stmt->execute([$request_id]);
@@ -52,8 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("
                     UPDATE adoptionrequests ar1
                     JOIN adoptionrequests ar2 ON ar1.Pet_ID = ar2.Pet_ID
-                    SET ar1.Status = 'Rejected',
-                        ar1.UpdatedAt = NOW()
+                    SET ar1.Status = 'Rejected'
                     WHERE ar2.Request_ID = ?
                     AND ar1.Request_ID != ?
                     AND ar1.Status = 'Pending'
@@ -64,8 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update adoption request status to rejected
                 $stmt = $conn->prepare("
                     UPDATE adoptionrequests 
-                    SET Status = 'Rejected',
-                        UpdatedAt = NOW()
+                    SET Status = 'Rejected'
                     WHERE Request_ID = ?
                 ");
                 $stmt->execute([$request_id]);
@@ -205,6 +202,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         width: 48px; 
         height: 48px;
         border-radius: 50%;
+    }
+
+    footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
     }
 
 </style>

@@ -54,7 +54,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
         <div class="nav-links">
             <?php if (isset($_SESSION['role'])): ?>
                 <?php if ($_SESSION['role'] === 'User'): ?>
-                    <a class="nav-bar-icon" href="">
+                    <a class="nav-bar-icon" href="savedPets.php">
                         <img src="assets/saved-pets-icon.png" alt="Saved Pets">
                     </a>
                 <?php endif; ?>
