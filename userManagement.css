@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
+:root {
+    --whitebg: #FFFFFF;
+    --beigebg: #FCEED5;
+    --lighterbeige: #F8F8F8;
+    --yellowbtn: #FBD157;
+    --activeyellow: #f8be0e;
+    --lightblue: #E4F4FF;
+    --darkblue: #103559;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Nunito', sans-serif;
+    color: #103559;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+    background-color: var(--whitebg);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.navbar {
+    background-color: var(--whitebg);
+    padding: 1rem 0;
+}
+
+.nav-container {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.nav-links img {
+    height: 40px;
+}
+
+.nav-links {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+h1 {
+    font-size: 32px;
+    margin-left: 50px;
+}
+
+#management {
+    text-decoration: none;
+    font-size: 42px;
+    font-weight: medium;
+    margin-left: 70px;
+}
+
+#goBack {
+    width: 35px;
+    height: 35px;
+}
+
+table {
+    margin-top: 20px;
+    align-self: center;
+    width: 90%;
+}
+
+th{
+    background-color: #103559;
+    color: #FFFFFF;
+    font-size: 22px;
+    font-weight: medium;
+    height: 69px;
+}
+
+td {
+    font-size: 18px;
+    font-weight: medium;
+    text-align: center;
+}
+
+#viewIcon {
+    width: 28px;
+    height: 28px;
+}
+
+#deleteIcon {
+    width: 28px;
+    height: 28px;
+}
+
+#profileIcon {
+    width: 45px;
+    height: 45px;
+}
+
+footer {
+    background-color: var(--beigebg);
+    color: var(--background-color);
+    margin-top: auto;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 2rem;
+    align-items: center;
+    font-size: 14px;
+}
+
+.footer-logo {
+    height: 45px;
+}
+
+.footer a {
+    color: var(--background-color);
+    text-decoration: none;
+    padding-left: 1rem;
+}

@@ -372,6 +372,8 @@ try {
         padding: 2rem;
         position: sticky;
         top: 2rem;
+        display: flex;
+        flex-direction: column;
     }
 
     .lister-profile {
@@ -434,21 +436,36 @@ try {
     }
 
     .view-lister-btn {
-        background-color: #ffd700;
-        color: #1a237e;
-        padding: 0.75rem 2rem;
+        background-color: var(--yellowbtn);
+        color: #103559;
+        padding: 0.75rem 1rem;
         border-radius: 25px;
-        border: none;
+        border: 1px solid #E7BD43;
         font-size: 16px;
         font-weight: 600;
         cursor: pointer;
         width: 100%;
+        margin-top: 1.5rem;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .view-lister-btn:hover {
+        background-color: var(--activeyellow);
+    }
+
+    .view-lister-btn:disabled {
+        background-color: #cccccc;
+        border-color: #bbbbbb;
+        cursor: not-allowed;
+        color: #666666;
     }
 
     .card img {
-        width: 250px;
-        height: 250px;
-        margin-right: 4rem;
+        width: 200px;
+        height: 200px;
+        margin-right: 3rem;
     }
 
 </style>
@@ -524,17 +541,17 @@ try {
             <div class="lister-profile">
                 <img src="<?php echo htmlspecialchars($pet['lister_pic']); ?>" alt="Lister" class="lister-pic">
                 <div class="lister-info">
-                    <h3 class="lister-info h3"><?php echo htmlspecialchars($pet['lister_name']); ?></h3>
-                    <p class="lister-info p"><?php echo htmlspecialchars($pet['lister_location']); ?></p>
+                    <h3><?php echo htmlspecialchars($pet['lister_name']); ?></h3>
+                    <p><?php echo htmlspecialchars($pet['lister_location']); ?></p>
                 </div>
             </div>
             
             <?php if (!empty($pet['Center_ID'])): ?>
-                <!-- If the pet is listed by a center -->
-                <button class="contact-btn"><a href="centerProfile.php?id=<?php echo $pet['Center_ID']; ?>" class="btn-primary">View Lister</a></button>
+                <a href="centerProfile.php?id=<?php echo $pet['Center_ID']; ?>" class="view-lister-btn">
+                    View Center
+                </a>
             <?php else: ?>
-                <!-- If the pet is listed by an individual user -->
-                <button class="contact-btn" disabled>Contact Lister</button>
+                <button class="view-lister-btn" disabled>Contact Lister</button>
             <?php endif; ?>
         </div>
     </div>
