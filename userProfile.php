@@ -2,6 +2,93 @@
 session_start();
 require 'config/connection.php';
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+error_log("Session data: " . print_r($_SESSION, true));
+error_log("User ID: " . ($_SESSION['user_id'] ?? 'not set'));
+error_log("User Role: " . ($_SESSION['role'] ?? 'not set'));
+
+$error_message = "";
+$success_message = "";
+$default_image = 'images/defaultprofile.png';
+
+// Retrieve user data function
+function getUserData($conn, $userId, $userRole) {
+    $table = ($userRole === 'Center') ? 'adoptioncenters' : 'individualusers';
+    $idField = ($userRole === 'Center') ? 'Center_ID' : 'User_ID';
+    
+    $stmt = $conn->prepare("SELECT * FROM $table WHERE $idField = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Update user data function
+function updateUser($conn, $userId, $userRole, $data) {
+    $table = ($userRole === 'Center') ? 'adoptioncenters' : 'individualusers';
+    $idField = ($userRole === 'Center') ? 'Center_ID' : 'User_ID';
+    
+    try {
+        $conn->beginTransaction();
+        
+        $updates = [];
+        $params = [];
+
+        // Handle fields based on role
+        if ($userRole === 'Center') {
+            if (!empty($data['centerName'])) {
+                $updates[] = "CenterName = ?";
+                $params[] = $data['centerName'];
+            }
+        } else {
+            if (!empty($data['userFirstName']) && !empty($data['userLastName'])) {
+                $updates[] = "Name = ?";
+                $params[] = trim($data['userFirstName'] . ' ' . $data['userLastName']);
+            }
+        }
+
+        // Handle common fields
+        $emailField = $userRole === 'Center' ? 'centerEmail' : 'userEmail';
+        if (!empty($data[$emailField])) {
+            $updates[] = "Email = ?";
+            $params[] = $data[$emailField];
+        }
+
+        $phoneField = $userRole === 'Center' ? 'centerPhone' : 'userPhone';
+        if (!empty($data[$phoneField])) {
+            $updates[] = "PhoneNo = ?";
+            $params[] = $data[$phoneField];
+        }
+
+        $stateField = $userRole === 'Center' ? 'centerState' : 'userState';
+        if (!empty($data[$stateField])) {
+            $updates[] = "Location = ?";
+            $params[] = $data[$stateField];
+        }
+
+        // Handle password update
+        if (!empty($data['password'])) {
+            $updates[] = "Password = ?";
+            $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+
+        if (!empty($updates)) {
+            $params[] = $userId;
+            $sql = "UPDATE $table SET " . implode(', ', $updates) . " WHERE $idField = ?";
+            $stmt = $conn->prepare($sql);
+            $result = $stmt->execute($params);
+            $conn->commit();
+            return $result;
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        $conn->rollBack();
+        throw $e;
+    }
+}
+
+// Check if user is logged in and retrieve user data
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -19,6 +106,40 @@ try {
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Error fetching user data: " . $e->getMessage());
+}
+
+// Add form submission handling
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update'])) {
+    error_log("Form submitted: " . print_r($_POST, true));
+    $response = ['success' => false, 'message' => ''];
+    
+    try {
+        error_log("Attempting to update user...");
+        if (updateUser($conn, $_SESSION['user_id'], $_SESSION['role'], $_POST)) {
+            error_log("Update successful");
+            $response['success'] = true;
+            $response['message'] = "Profile updated successfully";
+            
+            // Update session data if name was changed
+            if ($_SESSION['role'] === 'Center' && !empty($_POST['centerName'])) {
+                $_SESSION['name'] = $_POST['centerName'];
+                $response['newName'] = $_POST['centerName'];
+            } elseif (!empty($_POST['userFirstName']) && !empty($_POST['userLastName'])) {
+                $newName = trim($_POST['userFirstName'] . ' ' . $_POST['userLastName']);
+                $_SESSION['name'] = $newName;
+                $response['newName'] = $newName;
+            }
+        } else {
+            $response['message'] = "No changes were made";
+        }
+    } catch (Exception $e) {
+        error_log("Error updating user: " . $e->getMessage());
+        $response['message'] = $e->getMessage();
+    }
+    
+    error_log("Sending response: " . print_r($response, true));
+    echo json_encode($response);
+    exit();
 }
 ?>
 
@@ -175,33 +296,41 @@ try {
                 <input type="file" id="picture" name="picture" accept="image/*">
             </div>
             <h2 id="profile-title"><?php echo $userRole === 'Center' ? $userData['CenterName'] : $userData['Name']; ?></h2>
-            <button id="edit-button" class="btn-primary">Edit</button>
-            <div class="button-group" style="display: none;">
-                <button type="button" id="cancel-button" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">Save</button>
-            </div>
+            <button type="button" id="edit-button" class="btn-primary">Edit</button>
         </div>
         <div class="profile-right">
-            <form id="profileForm">
-                <div class="name-group">
+            <form id="profileForm" method="POST">
+                <input type="hidden" name="update" value="true">
+                
+                <?php if ($userRole === 'Center'): ?>
                     <div class="name-input-container">
-                        <label for="first-name">First name:</label>
-                        <input type="text" id="first-name" name="first-name" value="<?php echo explode(' ', $userData['Name'])[0] ?? ''; ?>" disabled required>
+                        <label for="center-name">Center Name:</label>
+                        <input type="text" id="center-name" name="centerName" value="<?php echo htmlspecialchars($userData['CenterName']); ?>" disabled required>
                     </div>
-                    <div class="name-input-container">
-                        <label for="last-name">Last name:</label>
-                        <input type="text" id="last-name" name="last-name" value="<?php echo explode(' ', $userData['Name'])[1] ?? ''; ?>" disabled required>
+                <?php else: ?>
+                    <div class="name-group">
+                        <div class="name-input-container">
+                            <label for="first-name">First name:</label>
+                            <input type="text" id="first-name" name="userFirstName" value="<?php echo htmlspecialchars(explode(' ', $userData['Name'])[0] ?? ''); ?>" disabled required>
+                        </div>
+                        <div class="name-input-container">
+                            <label for="surname">Last name:</label>
+                            <input type="text" id="surname" name="userLastName" value="<?php echo htmlspecialchars(explode(' ', $userData['Name'])[1] ?? ''); ?>" disabled required>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" value="<?php echo $userData['Email']; ?>" disabled required>
+                <input type="email" id="email" name="<?php echo $userRole === 'Center' ? 'centerEmail' : 'userEmail'; ?>" 
+                       value="<?php echo htmlspecialchars($userData['Email']); ?>" disabled required>
 
                 <label for="phone">Phone Number:</label>
-                <input type="text" id="phone" name="phone" value="<?php echo $userData['PhoneNo']; ?>" disabled required>
+                <input type="text" id="phone" name="<?php echo $userRole === 'Center' ? 'centerPhone' : 'userPhone'; ?>" 
+                       value="<?php echo htmlspecialchars($userData['PhoneNo']); ?>" disabled required>
 
                 <label for="state">State:</label>
-                <input type="text" id="state" name="state" value="<?php echo $userData['Location']; ?>" disabled required>
+                <input type="text" id="state" name="<?php echo $userRole === 'Center' ? 'centerState' : 'userState'; ?>" 
+                       value="<?php echo htmlspecialchars($userData['Location']); ?>" disabled required>
 
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" value="********" disabled>
@@ -212,9 +341,14 @@ try {
                     <p class="form-error" id="password-error"></p>
                 </div>
 
+                <div class="button-group" style="display: none;">
+                    <button type="button" id="cancel-button" class="btn-secondary">Cancel</button>
+                    <button type="submit" name="update" class="btn-primary">Save</button>
+                </div>
+
+                <p id="form-error-message" class="form-error"></p>
+                <p id="form-success-message" class="form-success"></p>
             </form>
-            <p id="form-error-message" class="form-error"></p>
-            <p id="form-success-message" class="form-success"></p>
         </div>
     </div>
 
@@ -231,6 +365,7 @@ try {
     </footer>
 
     <script>
+    
         document.addEventListener('DOMContentLoaded', function() {
             const editButton = document.getElementById('edit-button');
             const inputs = document.querySelectorAll('.profile-right input:not([type="password"])');
@@ -240,6 +375,10 @@ try {
             const profileForm = document.getElementById('profileForm');
             const cancelButton = document.getElementById('cancel-button');
             const pictureInput = document.getElementById('picture');
+            const profileImage = document.getElementById('profile-image');
+            const navProfileImage = document.querySelector('.nav-profile');
+            const errorMessage = document.getElementById('form-error-message');
+            const successMessage = document.getElementById('form-success-message');
 
             // Store original values
             let originalValues = {};
@@ -281,7 +420,7 @@ try {
                 // Validate file type
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
-                    alert('Please upload a JPG, PNG, or GIF file.');
+                    document.getElementById('form-error-message').textContent = 'Please upload a JPG, PNG, or GIF file.';
                     return;
                 }
 
@@ -289,8 +428,8 @@ try {
                 formData.append('picture', file);
 
                 // Show loading state
-                const profileImage = document.getElementById('profile-image');
                 profileImage.style.opacity = '0.5';
+                if (navProfileImage) navProfileImage.style.opacity = '0.5';
 
                 fetch('handlers/updateProfilePic.php', {
                     method: 'POST',
@@ -299,9 +438,11 @@ try {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Update profile image
+                        // Update both profile images
                         profileImage.src = data.picture;
-                        document.getElementById('form-success-message').textContent = 'Profile picture updated successfully';
+                        if (navProfileImage) navProfileImage.src = data.picture;
+                        
+                        document.getElementById('form-success-message').textContent = data.message;
                         document.getElementById('form-error-message').textContent = '';
                     } else {
                         document.getElementById('form-error-message').textContent = data.message;
@@ -313,7 +454,9 @@ try {
                     document.getElementById('form-error-message').textContent = 'Failed to upload profile picture';
                 })
                 .finally(() => {
+                    // Reset opacity
                     profileImage.style.opacity = '1';
+                    if (navProfileImage) navProfileImage.style.opacity = '1';
                     pictureInput.value = ''; // Reset file input
                 });
             });
@@ -321,32 +464,34 @@ try {
             // Handle form submission
             profileForm.addEventListener('submit', function(e) {
                 e.preventDefault();
+                console.log('Form submitted');
                 
-                // Validate passwords if changed
-                const password = passwordInput.value;
-                const confirmPassword = document.getElementById('confirm-password').value;
+                const formData = new FormData(this);
+                formData.append('update', 'true');
                 
-                if (password && password !== confirmPassword) {
-                    document.getElementById('password-error').textContent = 'Passwords do not match';
-                    return;
+                // Log form data
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
                 }
 
-                const formData = new FormData(this);
-                
-                // Add loading state to save button
-                const submitButton = this.querySelector('button[type="submit"]');
+                // Add loading state
+                const submitButton = buttonGroup.querySelector('button[type="submit"]');
                 const originalButtonText = submitButton.textContent;
                 submitButton.textContent = 'Saving...';
                 submitButton.disabled = true;
 
-                fetch('handlers/updateProfile.php', {
+                fetch(window.location.href, {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Response data:', data);
                     if (data.success) {
-                        // Update profile title with new name
+                        // Update profile title if name was changed
                         if (data.newName) {
                             document.getElementById('profile-title').textContent = data.newName;
                         }
@@ -360,25 +505,24 @@ try {
                         
                         // Reset form state
                         inputs.forEach(input => input.disabled = true);
-                        passwordInput.value = '********';
+                        passwordInput.value = '**********';
                         passwordInput.disabled = true;
                         confirmPasswordField.style.display = 'none';
                         buttonGroup.style.display = 'none';
                         editButton.style.display = 'block';
                         
-                        document.getElementById('form-success-message').textContent = data.message;
-                        document.getElementById('form-error-message').textContent = '';
+                        successMessage.textContent = data.message;
+                        errorMessage.textContent = '';
                     } else {
-                        document.getElementById('form-error-message').textContent = data.message;
-                        document.getElementById('form-success-message').textContent = '';
+                        errorMessage.textContent = data.message;
+                        successMessage.textContent = '';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('form-error-message').textContent = 'Update failed';
+                    errorMessage.textContent = 'Update failed';
                 })
                 .finally(() => {
-                    // Reset button state
                     submitButton.textContent = originalButtonText;
                     submitButton.disabled = false;
                 });

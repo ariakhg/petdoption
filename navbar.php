@@ -50,7 +50,7 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
         </div>
 
         <!-- Right side of navbar -->
-        <div class="nav-links"> 
+        <div class="nav-links">
             <?php if (isset($_SESSION['role'])): ?>
                 <?php if ($_SESSION['role'] === 'User'): ?>
                     <a class="nav-bar-icon" href="">
