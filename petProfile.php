@@ -323,11 +323,6 @@ try {
         font-size: 16px;
     }
 
-    /* .about-header{
-        font-size: 36px;
-        font-weight: 700px;
-    } */
-
     .about-section {
         display: grid;
         grid-template-columns: 2fr 1fr; /* 2/3 for about, 1/3 for lister */
@@ -438,7 +433,7 @@ try {
         }
     }
 
-    .contact-btn {
+    .view-lister-btn {
         background-color: #ffd700;
         color: #1a237e;
         padding: 0.75rem 2rem;
@@ -533,7 +528,14 @@ try {
                     <p class="lister-info p"><?php echo htmlspecialchars($pet['lister_location']); ?></p>
                 </div>
             </div>
-            <button class="contact-btn">Contact Lister</button>
+            
+            <?php if (!empty($pet['Center_ID'])): ?>
+                <!-- If the pet is listed by a center -->
+                <button class="contact-btn"><a href="centerProfile.php?id=<?php echo $pet['Center_ID']; ?>" class="btn-primary">View Lister</a></button>
+            <?php else: ?>
+                <!-- If the pet is listed by an individual user -->
+                <button class="contact-btn" disabled>Contact Lister</button>
+            <?php endif; ?>
         </div>
     </div>
 
