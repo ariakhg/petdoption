@@ -90,6 +90,7 @@ try {
             align-items: center;
             gap: 1rem;
             font-weight: 500;
+            text-decoration: none;
         }
 
         .btn:hover {
@@ -240,7 +241,9 @@ try {
                     </div>
                 </div>
                 <div class="action-buttons">
-                    <button class="btn edit-btn" onclick="window.location.href='list_pet.php?edit=<?php echo $pet['Pet_ID']; ?>'">Edit</button>
+                    <button class="btn edit-btn">
+                        <a class="btn edit-btn" href="petListingForm.php?edit=<?php echo $pet['Pet_ID']; ?>">Edit</a>
+                    </button>
                     <div class="dropdown">
                         <button class="btn update-btn">Update</button>
                         <div class="dropdown-content">

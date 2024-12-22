@@ -8,6 +8,49 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Initialize variables
+$isEdit = isset($_GET['edit']);
+$pet = null;
+$errorMessage = '';
+
+// Fetch pet data if editing
+if ($isEdit) {
+    try {
+        $stmt = $conn->prepare("
+            SELECT p.*, 
+                   CASE 
+                       WHEN p.Center_ID IS NOT NULL THEN ac.CenterName
+                       WHEN p.User_ID IS NOT NULL THEN i.Name
+                   END AS lister_name
+            FROM pets p
+            LEFT JOIN individualusers i ON p.User_ID = i.User_ID
+            LEFT JOIN adoptioncenters ac ON p.Center_ID = ac.Center_ID
+            WHERE p.Pet_ID = ?
+        ");
+        $stmt->execute([$_GET['edit']]);
+        $pet = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$pet) {
+            $_SESSION['error'] = "Pet not found.";
+            header('Location: petListing.php');
+            exit();
+        }
+
+        // Verify ownership
+        if ($_SESSION['role'] === 'Center' && $pet['Center_ID'] != $_SESSION['user_id'] ||
+            $_SESSION['role'] !== 'Center' && $pet['User_ID'] != $_SESSION['user_id']) {
+            $_SESSION['error'] = "Unauthorized access.";
+            header('Location: petListing.php');
+            exit();
+        }
+
+    } catch (PDOException $e) {
+        $_SESSION['error'] = "Error fetching pet details: " . $e->getMessage();
+        header('Location: petListing.php');
+        exit();
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -20,68 +63,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_id = $_SESSION['user_id'];
         }
 
-        // Prepare SQL statement
-        $sql = "INSERT INTO pets (User_ID, Center_ID, Name, AnimalType, Breed, Gender, 
-                Weight, Height, Photo, DOB, AdoptionStatus, Color, MedicalHistory, Description) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        // Handle file upload
-        $photo = '';
+        // Handle file upload if new photo is provided
+        $photo = $isEdit ? $pet['Photo'] : ''; // Keep existing photo for edit
         if (isset($_FILES['photo']) && $_FILES['photo']['error'] === 0) {
-            $target_dir = "pet/";
-            
-            // Create directory if it doesn't exist
+            $target_dir = "uploads/pets/";
             if (!file_exists($target_dir)) {
                 mkdir($target_dir, 0777, true);
             }
             
-            // Get file extension
             $file_extension = strtolower(pathinfo($_FILES["photo"]["name"], PATHINFO_EXTENSION));
+            $new_filename = uniqid() . '_' . time() . '.' . $file_extension;
+            $target_file = $target_dir . $new_filename;
             
-            // Generate unique filename
-            $photo = uniqid() . '_' . time() . '.' . $file_extension;
-            $target_file = $target_dir . $photo;
-            
-            // Validate file type
             $allowed_types = array('jpg', 'jpeg', 'png', 'gif');
             if (!in_array($file_extension, $allowed_types)) {
-                $_SESSION['error'] = "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-                exit;
+                throw new Exception("Sorry, only JPG, JPEG, PNG & GIF files are allowed.");
             }
             
-            // Move uploaded file
             if (move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
-                $photo = $target_file; // Save the full path to database
+                $photo = $target_file;
+                
+                // Delete old photo if exists and different
+                if ($isEdit && !empty($pet['Photo']) && file_exists($pet['Photo'])) {
+                    unlink($pet['Photo']);
+                }
             } else {
-                $_SESSION['error'] = "Sorry, there was an error uploading your file.";
-                exit;
+                throw new Exception("Sorry, there was an error uploading your file.");
             }
         }
 
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([
-            $user_id,
-            $center_id,
-            $_POST['name'],
-            $_POST['animalType'],
-            $_POST['breed'],
-            $_POST['gender'],
-            $_POST['weight'],
-            $_POST['height'],
-            $photo,
-            $_POST['dob'],
-            'Available', // Default status for new pets
-            $_POST['color'],
-            $_POST['medicalHistory'],
-            $_POST['description']
-        ]);
+        if ($isEdit) {
+            // Update existing pet
+            $sql = "UPDATE pets SET 
+                    Name = ?, 
+                    AnimalType = ?, 
+                    Breed = ?, 
+                    Gender = ?, 
+                    Weight = ?, 
+                    Height = ?, 
+                    DOB = ?, 
+                    Color = ?, 
+                    MedicalHistory = ?, 
+                    Description = ?
+                    " . ($photo !== $pet['Photo'] ? ", Photo = ?" : "") . "
+                    WHERE Pet_ID = ?";
+            
+            $params = [
+                $_POST['name'],
+                $_POST['animalType'],
+                $_POST['breed'],
+                $_POST['gender'],
+                $_POST['weight'],
+                $_POST['height'],
+                $_POST['dob'],
+                $_POST['color'],
+                $_POST['medicalHistory'],
+                $_POST['description']
+            ];
 
-        $_SESSION['success'] = "Pet listed successfully!";
+            if ($photo !== $pet['Photo']) {
+                $params[] = $photo;
+            }
+            $params[] = $_GET['edit'];
+
+        } else {
+            // Insert new pet
+            $sql = "INSERT INTO pets (User_ID, Center_ID, Name, AnimalType, Breed, Gender, 
+                    Weight, Height, Photo, DOB, AdoptionStatus, Color, MedicalHistory, Description) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            $params = [
+                $user_id,
+                $center_id,
+                $_POST['name'],
+                $_POST['animalType'],
+                $_POST['breed'],
+                $_POST['gender'],
+                $_POST['weight'],
+                $_POST['height'],
+                $photo,
+                $_POST['dob'],
+                'Available',
+                $_POST['color'],
+                $_POST['medicalHistory'],
+                $_POST['description']
+            ];
+        }
+
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+
+        $_SESSION['success'] = $isEdit ? "Pet updated successfully!" : "Pet listed successfully!";
         header('Location: petListing.php');
         exit();
 
-    } catch (PDOException $e) {
-        $_SESSION['error'] = "Error listing pet: " . $e->getMessage();
+    } catch (Exception $e) {
+        $errorMessage = $e->getMessage();
     }
 }
 ?>
@@ -215,38 +292,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="form-container">
         <div class="form-header">
-            <h2>List a Pet</h2>
+            <h2><?php echo $isEdit ? 'Edit Pet' : 'List a Pet'; ?></h2>
             <div class="desc">
-                <p>Fill in the details about the pet you want to put up for adoption. Make sure to provide accurate information to help potential adopters.</p>
+                <p><?php echo $isEdit ? 'Update the details of your pet listing.' : 'Fill in the details about the pet you want to put up for adoption.'; ?></p>
             </div>
         </div>
+
+        <?php if (!empty($errorMessage)): ?>
+            <div class="alert alert-error"><?php echo $errorMessage; ?></div>
+        <?php endif; ?>
 
         <div class="pet-form-container">
             <form class="pet-form" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="name">Pet Name</label>
-                    <input type="text" id="name" name="name" required>
+                    <input type="text" id="name" name="name" 
+                           value="<?php echo $pet ? htmlspecialchars($pet['Name']) : ''; ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="animalType">Animal Type</label>
                     <select id="animalType" name="animalType" required>
                         <option value="">Select animal type</option>
-                        <option value="Dog">Dog</option>
-                        <option value="Cat">Cat</option>
-                        <option value="Bird">Bird</option>
-                        <option value="Other">Other</option>
+                        <?php
+                        $types = ['Dog', 'Cat', 'Bird', 'Other'];
+                        foreach ($types as $type) {
+                            $selected = ($pet && $pet['AnimalType'] == $type) ? 'selected' : '';
+                            echo "<option value=\"$type\" $selected>$type</option>";
+                        }
+                        ?>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label for="breed">Breed</label>
-                    <input type="text" id="breed" name="breed" required>
+                    <input type="text" id="breed" name="breed" 
+                           value="<?php echo $pet ? htmlspecialchars($pet['Breed']) : ''; ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="color">Color</label>
-                    <input type="text" id="color" name="color" required>
+                    <input type="text" id="color" name="color" 
+                           value="<?php echo $pet ? htmlspecialchars($pet['Color']) : ''; ?>" required>
                 </div>
 
                 <!-- Combined row for gender, weight, and height -->
@@ -255,44 +342,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label for="gender">Gender</label>
                         <select id="gender" name="gender" required>
                             <option value="">Select gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
+                            <option value="Male" <?php echo ($pet && $pet['Gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
+                            <option value="Female" <?php echo ($pet && $pet['Gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="weight">Weight (kg)</label>
-                        <input type="number" id="weight" name="weight" step="0.1" required>
+                        <input type="number" id="weight" name="weight" step="0.1" 
+                               value="<?php echo $pet ? htmlspecialchars($pet['Weight']) : ''; ?>" required>
                     </div>
 
                     <div class="form-group">
                         <label for="height">Height (cm)</label>
-                        <input type="number" id="height" name="height" required>
+                        <input type="number" id="height" name="height" 
+                               value="<?php echo $pet ? htmlspecialchars($pet['Height']) : ''; ?>" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="dob">Date of Birth</label>
-                    <input type="date" id="dob" name="dob" required>
+                    <input type="date" id="dob" name="dob" 
+                           value="<?php echo $pet ? htmlspecialchars($pet['DOB']) : ''; ?>" required>
                 </div>
 
                 <div class="form-group">
                     <label for="photo">Photo</label>
-                    <input type="file" id="photo" name="photo" accept="image/*" required>
+                    <?php if ($pet && $pet['Photo']): ?>
+                        <img src="<?php echo htmlspecialchars($pet['Photo']); ?>" 
+                             alt="Current pet photo" style="max-width: 200px; margin-bottom: 1rem;">
+                        <br>
+                        <input type="file" id="photo" name="photo" accept="image/*">
+                        <small>Leave empty to keep current photo</small>
+                    <?php else: ?>
+                        <input type="file" id="photo" name="photo" accept="image/*" required>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label for="medicalHistory">Medical History</label>
-                    <textarea id="medicalHistory" name="medicalHistory" required></textarea>
+                    <textarea id="medicalHistory" name="medicalHistory" required><?php echo $pet ? htmlspecialchars($pet['MedicalHistory']) : ''; ?></textarea>
                 </div>
 
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" required></textarea>
+                    <textarea id="description" name="description" required><?php echo $pet ? htmlspecialchars($pet['Description']) : ''; ?></textarea>
                 </div>
 
                 <div class="button-group">
-                    <button type="submit" class="btn-form">List Pet</button>
+                    <button type="submit" class="btn-form">
+                        <?php echo $isEdit ? 'Save Changes' : 'List Pet'; ?>
+                    </button>
                 </div>
             </form>
         </div>
