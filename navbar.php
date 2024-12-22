@@ -57,9 +57,6 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
                     <a class="nav-bar-icon" href="">
                         <img src="assets/saved-pets-icon.png" alt="Saved Pets">
                     </a>
-                    <a class="nav-bar-icon" href="">
-                        <img src="assets/chat-icon.png" alt="Chat">
-                    </a>
                 <?php endif; ?>
                 <a href="userProfile.php">
                     <img class="nav-profile" src="<?php echo htmlspecialchars($userProfile['ProfilePic']); ?>" 

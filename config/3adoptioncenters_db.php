@@ -7,7 +7,7 @@ try {
         `Center_ID` int(5) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         `CenterName` varchar(255) NOT NULL,
         `PhoneNo` varchar(100) NOT NULL,
-        `ProfilePic` varchar(255) NOT NULL DEFAULT 'profile/defaultprofile.png',
+        `ProfilePic` varchar(255) NOT NULL DEFAULT 'assets/defaultProfile.jpg',
         `Location` varchar(255) NOT NULL,
         `Email` varchar(255) NOT NULL,
         `Password` varchar(255) NOT NULL,
