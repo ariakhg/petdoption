@@ -1,9 +1,95 @@
+<?php
+session_start();
+require 'config/connection.php';
+
+try {
+    // Fetch pending adoption requests
+    $stmt = $conn->prepare("
+        SELECT ar.*, p.Name as PetName, p.Photo as PetPhoto, u.Name as RequesterName, u.Email as RequesterEmail 
+        FROM adoptionrequests ar
+        JOIN pets p ON ar.Pet_ID = p.Pet_ID
+        JOIN individualusers u ON ar.User_ID = u.User_ID
+        WHERE ar.Status = 'Pending'
+    ");
+    $stmt->execute();
+    $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch(PDOException $e) {
+    echo "Error: " . $e->getMessage();
+    exit();
+}
+
+// Handle request actions (Accept/Reject)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && isset($_POST['request_id'])) {
+        $action = $_POST['action'];
+        $request_id = $_POST['request_id'];
+        
+        try {
+            // Start transaction
+            $conn->beginTransaction();
+            
+            if ($action === 'accept') {
+                // Update adoption request status
+                $stmt = $conn->prepare("
+                    UPDATE adoptionrequests 
+                    SET Status = 'Accepted', 
+                        UpdatedAt = NOW() 
+                    WHERE Request_ID = ?
+                ");
+                $stmt->execute([$request_id]);
+
+                // Update pet status to Adopted
+                $stmt = $conn->prepare("
+                    UPDATE pets p
+                    JOIN adoptionrequests ar ON p.Pet_ID = ar.Pet_ID
+                    SET p.AdoptionStatus = 'Adopted'
+                    WHERE ar.Request_ID = ?
+                ");
+                $stmt->execute([$request_id]);
+
+                // Reject other pending requests for the same pet
+                $stmt = $conn->prepare("
+                    UPDATE adoptionrequests ar1
+                    JOIN adoptionrequests ar2 ON ar1.Pet_ID = ar2.Pet_ID
+                    SET ar1.Status = 'Rejected',
+                        ar1.UpdatedAt = NOW()
+                    WHERE ar2.Request_ID = ?
+                    AND ar1.Request_ID != ?
+                    AND ar1.Status = 'Pending'
+                ");
+                $stmt->execute([$request_id, $request_id]);
+
+            } elseif ($action === 'reject') {
+                // Update adoption request status to rejected
+                $stmt = $conn->prepare("
+                    UPDATE adoptionrequests 
+                    SET Status = 'Rejected',
+                        UpdatedAt = NOW()
+                    WHERE Request_ID = ?
+                ");
+                $stmt->execute([$request_id]);
+            }
+
+            $conn->commit();
+            header('Location: adoptionRequest.php');
+            exit();
+
+        } catch(PDOException $e) {
+            $conn->rollBack();
+            echo "Error: " . $e->getMessage();
+            exit();
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pet Profile</title>
+    <title>Adoption Requests</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <style>
@@ -120,34 +206,58 @@
         height: 48px;
         border-radius: 50%;
     }
+
 </style>
 <body>
-    <!-- Navigation Bar -->
-    <?php include 'navbar.php';?>
+    <?php include 'navbar.php'; ?>
 
-    <a href="#" class="back-link">< Adoption Request</a>
+    <a href='petListing.php' class="back-link">< Adoption Request</a>
+
+    <?php foreach ($requests as $request): ?>
     <div class="card-container">
         <div class="card">
-            <img src="images/dog1.jpg" alt="Mochi" class="pet-image">
-            <h2 class="pet-name">Mochi</h2>
+            <img src="<?php echo htmlspecialchars($request['PetPhoto']); ?>" 
+                 alt="<?php echo htmlspecialchars($request['PetName']); ?>" 
+                 class="pet-image">
+            <h2 class="pet-name"><?php echo htmlspecialchars($request['PetName']); ?></h2>
             <div class="pet-details">
                 <div class="detail-item">
                     <h3>Requested by</h3>
-                    <p>jozelle@gmail.com</p>
+                    <p><?php echo htmlspecialchars($request['RequesterEmail']); ?></p>
                 </div>
             </div>
             <button id="chatButton" class="btn-primary">Chat with User</button>
-            <button class="btn-crud"><img src="ui/eye.png" alt="view" class="crud"></button>
-            <button class="btn-crud"><img src="ui/reject.png" alt="reject" class="crud"></button>
-            <button class="btn-crud"><img src="ui/accept.png" alt="accept" class="crud"></button>
+            
+            <!-- View Pet Profile -->
+            <a href="petProfile.php?id=<?php echo $request['Pet_ID']; ?>" class="btn-crud">
+                <img src="ui/eye.png" alt="view" class="crud">
+            </a>
+
+            <!-- Reject Request -->
+            <form method="POST" style="display: inline;">
+                <input type="hidden" name="request_id" value="<?php echo $request['Request_ID']; ?>">
+                <input type="hidden" name="action" value="reject">
+                <button type="submit" class="btn-crud" onclick="return confirm('Are you sure you want to reject this request?');">
+                    <img src="ui/reject.png" alt="reject" class="crud">
+                </button>
+            </form>
+
+            <!-- Accept Request -->
+            <form method="POST" style="display: inline;">
+                <input type="hidden" name="request_id" value="<?php echo $request['Request_ID']; ?>">
+                <input type="hidden" name="action" value="accept">
+                <button type="submit" class="btn-crud" onclick="return confirm('Are you sure you want to accept this request?');">
+                    <img src="ui/accept.png" alt="accept" class="crud">
+                </button>
+            </form>
         </div>
     </div>
-    <br><br><br>
+    <?php endforeach; ?>
 
     <!-- Footer -->
     <footer>
         <div class="footer">
-            <p>&copy;Copyright 2024 Pedoption. All rights reserved.</p>
+            <p>&copy; 2024 Petdoption. All rights reserved.</p>
             <img src="assets/logo.png" alt="Petdoption Logo" class="footer-logo">
             <div>
                 <a href="#privacy">Privacy Policy</a>
