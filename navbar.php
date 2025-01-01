@@ -58,10 +58,12 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
                         <img src="assets/saved-pets-icon.png" alt="Saved Pets">
                     </a>
                 <?php endif; ?>
-                <a href="userProfile.php">
+                <?php if ($_SESSION['role'] !== 'Admin'): ?>
+                    <a href="userProfile.php">
                     <img class="nav-profile" src="<?php echo htmlspecialchars($userProfile['ProfilePic']); ?>" 
                     alt="Profile Picture" style="border-radius: 50%; width: 2.3rem; height: 2.3rem; object-fit: cover;">
-                </a>
+                    </a>
+                <?php endif; ?>
                 <a href="handlers/logout.php">Log Out</a>
             <?php else: ?>
                 <a href="login.php">Log In</a>

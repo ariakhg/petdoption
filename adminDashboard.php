@@ -39,7 +39,7 @@ try {
 <body>
     <?php include 'navbar.php'; ?>
 
-    <h1>
+    <h1 class="admin-title">
         Welcome Back, Admin!
     </h1>
     <div class="mainParent">

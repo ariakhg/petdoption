@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update adoption request status
                 $stmt = $conn->prepare("
                     UPDATE adoptionrequests 
-                    SET Status = 'Accepted'
+                    SET Status = 'Approved'
                     WHERE Request_ID = ?
                 ");
                 $stmt->execute([$request_id]);

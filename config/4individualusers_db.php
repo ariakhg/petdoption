@@ -34,7 +34,7 @@ try {
 
     // Insert hashed passwords into the database for individual users
     foreach ($individualUsers as $user) {
-        $hashedPassword = password_hash($user[6], PASSWORD_DEFAULT);  // Hash the password
+        $hashedPassword = password_hash($user[5], PASSWORD_DEFAULT);  // Hash the password
         $stmt = $conn->prepare("INSERT INTO individualusers (User_ID, Name, Email, PhoneNo, Location, Password, Role, SavedPets) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$user[0], $user[1], $user[2], $user[3], $user[4], $hashedPassword, $user[6], $user[7]]);
     }

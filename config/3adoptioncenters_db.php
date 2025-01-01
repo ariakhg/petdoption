@@ -30,7 +30,7 @@ try {
 
     // Insert hashed passwords into the database for adoption centers
     foreach ($adoptionCenters as $center) {
-        $hashedPassword = password_hash($center[6], PASSWORD_DEFAULT);  // Hash the password
+        $hashedPassword = password_hash($center[5], PASSWORD_DEFAULT);  // Hash the password
         $stmt = $conn->prepare("INSERT INTO adoptioncenters (Center_ID, CenterName, PhoneNo, Location, Email, Password, Role, AvgRating) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$center[0], $center[1], $center[2], $center[3], $center[4], $hashedPassword, $center[6], $center[7]]);
     }
