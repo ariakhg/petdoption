@@ -4,16 +4,15 @@ session_start(); // Start the session
 // Unset all session variables
 $_SESSION = [];
 
-// Destroy the session
-if (ini_get("session.use_cookies")) {
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
+// Clear all cookies
+if (isset($_COOKIE['remember_email'])) {
+    setcookie('remember_email', '', time() - 3600, '/');
+}
+if (isset($_COOKIE['remember_type'])) {
+    setcookie('remember_type', '', time() - 3600, '/');
 }
 
-// Finally, destroy the session
+// Clear session
 session_destroy();
 
 // Redirect to the login page or home page

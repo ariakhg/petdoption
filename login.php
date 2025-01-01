@@ -11,6 +11,13 @@ if (isset($_SESSION['success'])) {
     unset($_SESSION['success']);
 }
 
+// Add this at the top of login.php to check for remembered login
+if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_email']) && isset($_COOKIE['remember_type'])) {
+    // Auto-fill the login form
+    $remembered_email = $_COOKIE['remember_email'];
+    $remembered_type = $_COOKIE['remember_type'];
+}
+
 // Handle login form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
@@ -35,32 +42,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
-            $_SESSION['error'] = "Email address not found. Please check your email or register for a new account.";
+            $_SESSION['error'] = "Email address not found.";
         } elseif (!password_verify($password, $user['Password'])) {
-            $_SESSION['error'] = "Incorrect password. Please try again.";
+            $_SESSION['error'] = "Incorrect password.";
         } else {
             // Login successful
             $_SESSION['user_id'] = $user[($accountType === 'user' ? 'User_ID' : 
-                                        ($accountType === 'adoption-center' ? 'Center_ID' : 'Admin_ID'))];
+                                    ($accountType === 'adoption-center' ? 'Center_ID' : 'Admin_ID'))];
             $_SESSION['role'] = $user['Role'];
             $_SESSION['email'] = $user['Email'];
 
-            // Handle remember me functionality
+            // If remember me is checked, set cookies
             if ($remember) {
-                $token = bin2hex(random_bytes(32));
-                
-                $stmt = $conn->prepare("UPDATE " . ($accountType === 'user' ? 'individualusers' : 
-                                                 ($accountType === 'adoption-center' ? 'adoptioncenters' : 'admin')) . 
-                                     " SET remember_token = ? WHERE Email = ?");
-                $stmt->execute([$token, $email]);
-
-                setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/');
-                setcookie('user_email', $email, time() + (30 * 24 * 60 * 60), '/');
-                setcookie('user_role', $user['Role'], time() + (30 * 24 * 60 * 60), '/');
+                // Set cookies for 30 days
+                setcookie('remember_email', $email, time() + (30 * 24 * 60 * 60), '/');
+                setcookie('remember_type', $accountType, time() + (30 * 24 * 60 * 60), '/');
             }
 
             // Redirect based on role
-            switch ($user['Role']) {
+            switch($user['Role']) {
                 case 'User':
                     header("Location: findAPet.php");
                     break;
@@ -68,13 +68,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: petListing.php");
                     break;
                 case 'Admin':
-                    header("Location: adminDashboard.php");
+                    header("Location: admin/dashboard.php");
                     break;
             }
             exit();
         }
-
-    } catch (PDOException $e) {
+    } catch(PDOException $e) {
         $_SESSION['error'] = "An error occurred. Please try again later.";
     }
 }
