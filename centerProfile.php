@@ -26,10 +26,11 @@ try {
     $stmt->execute([$center_id]);
     $pets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch reviews for the center
-    $stmt = $conn->prepare("SELECT r.*, u.Name AS Full_Name FROM reviewratings r 
-                             JOIN individualusers u ON r.User_ID = u.User_ID 
-                             WHERE Reviewed_Center_ID = ?");
+    // Fetch reviews with user information
+    $stmt = $conn->prepare("SELECT r.*, u.Name AS Full_Name, u.ProfilePic 
+                        FROM reviewratings r 
+                        JOIN individualusers u ON r.User_ID = u.User_ID 
+                        WHERE r.Reviewed_Center_ID = ?");
     $stmt->execute([$center_id]);
     $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -91,7 +92,7 @@ try {
             justify-content: center;
         }
 
-        .profile-image img {
+        .profile-image img , .review-section img {
             width: 143px;
             height: 143px;
             border-radius: 50%;
@@ -133,7 +134,8 @@ try {
             font-size: 16px;
             font-weight: 700;
             color: #1B141F;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            text-decoration: none;
         }
 
         .section-title h1 {
@@ -150,15 +152,20 @@ try {
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             padding: 2rem;
-            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .pet-card {
-            background-color: #E7F3FF;
-            border-radius: 20px;
+            background-color: var(--lightblue);
+            border-radius: 50px;
             padding: 2rem;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             position: relative;
+            min-height: 433px;
+            width: 326px;
         }
 
         .pet-image {
@@ -237,17 +244,6 @@ try {
             display: flex;
             align-items: center;
             gap: 3rem;
-        }
-
-        .review-image {
-            width: 86px;
-            height: 86px;
-            border-radius: 50%;
-            background-color: var(--yellow);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 120px;
         }
 
         .review-details h3 {
@@ -331,9 +327,9 @@ try {
     <div class="reviews-section">
         <?php foreach ($reviews as $review): ?>
             <div class="review-section">
-                <div class="review-image">
-                    <img src="assets/default-profile.jpg" alt="Reviewer">
-                </div>
+            <div class="review-image">
+                <img src="<?php echo htmlspecialchars($review['ProfilePic']); ?>">
+            </div>
                 <div class="review-details">
                     <h3><?php echo htmlspecialchars($review['Full_Name']); ?></h3>
                     <p><strong>Rating:</strong> <?php echo htmlspecialchars($review['Rating']); ?>/5</p>

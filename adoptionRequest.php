@@ -204,6 +204,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         border-radius: 50%;
     }
 
+    #chatButton {
+        align-self: center;
+        background-color: var(--yellowbtn);
+        padding: 0.4rem;
+        border-radius: 50px;
+        border: 2px solid var(--yellowbtn);
+        width: 9rem;
+        height: 2.5rem;
+        margin-right: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
     footer {
         position: absolute;
         bottom: 0;
@@ -229,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <p><?php echo htmlspecialchars($request['RequesterEmail']); ?></p>
                 </div>
             </div>
-            <button id="chatButton" class="btn-primary">Chat with User</button>
+            <button id="chatButton">Chat with User</button>
             
             <!-- View Pet Profile -->
             <a href="petProfile.php?id=<?php echo $request['Pet_ID']; ?>" class="btn-crud">

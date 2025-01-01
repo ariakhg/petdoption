@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
         
         // Insert review
         $stmt = $conn->prepare("
-            INSERT INTO reviewratings (User_ID, Center_ID, Rating, Review) 
+            INSERT INTO reviewratings (User_ID, Reviewed_Center_ID, Rating, Review) 
             VALUES (?, ?, ?, ?)
         ");
         $stmt->execute([$user_id, $center_id, $rating, $review]);
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
             SET AvgRating = (
                 SELECT ROUND(AVG(Rating), 1)
                 FROM reviewratings 
-                WHERE Center_ID = ?
+                WHERE Reviewed_Center_ID = ?
             )
             WHERE Center_ID = ?
         ");
@@ -39,14 +39,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
 
         $conn->commit();
         
-        // Add success message
         $_SESSION['success_message'] = "Review submitted successfully!";
         header('Location: savedPets.php');
         exit();
 
     } catch(PDOException $e) {
         $conn->rollBack();
-        echo "Error: " . $e->getMessage();
+        $_SESSION['error_message'] = "Error submitting review. Please try again.";
+        header('Location: savedPets.php');
+        exit();
     }
 }
 
