@@ -29,7 +29,7 @@ try {
     // Individual user data
     $individualUsers = [
         ['1', 'Rebecca Lee', 'rebecca@gmail.com', '1234567890', 'Johor', '123', 'User', '', ''],
-        ['2', 'Jane Soo', 'janesoo@gmail.com', '9876543210', 'Selangor', '123', 'User', '', '']
+        ['2', 'Jane Soo', 'janesoo@gmail.com', '9876543210', 'Selangor', '123', 'User', '', '4']
     ];
 
     // Insert hashed passwords into the database for individual users

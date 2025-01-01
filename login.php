@@ -68,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: petListing.php");
                     break;
                 case 'Admin':
-                    header("Location: admin/dashboard.php");
+                    header("Location: adminDashboard.php");
                     break;
             }
             exit();
